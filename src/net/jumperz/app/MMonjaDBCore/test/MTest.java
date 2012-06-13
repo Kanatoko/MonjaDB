@@ -19,6 +19,7 @@ throws Exception
 mongo = new Mongo( "192.168.3.205" );
 db = mongo.getDB( "test2" );
 
+testParseJsonToArray();
 testSort();
 testLimit1();
 testSkip2();
@@ -34,6 +35,45 @@ testFindAction();
 testSkipLimit();
 System.out.println( "OK" );
 System.exit( 0 );
+}
+//--------------------------------------------------------------------------------
+public static void testParseJsonToArray()
+throws Exception
+{
+
+{
+BasicDBList l = MMongoUtil.parseJsonToArray( db, "{a:1}" );
+if( l.size() != 1 ){ throw new Exception(); };
+BasicDBObject o = (BasicDBObject)l.get( 0 );
+if( !o.get( "a" ).equals( new Double( 1 ) ) ){ throw new Exception(); }
+}
+
+{
+BasicDBList l = MMongoUtil.parseJsonToArray( db, "{a:1},{b:'foobar'}" );
+if( l.size() != 2 ){ throw new Exception(); };
+BasicDBObject o = (BasicDBObject)l.get( 0 );
+if( !o.get( "a" ).equals( new Double( 1 ) ) ){ throw new Exception(); }
+BasicDBObject o2 = (BasicDBObject)l.get( 1 );
+if( !o2.get( "b" ).equals( "foobar" ) ){ throw new Exception(); }
+}
+
+{
+BasicDBList l = MMongoUtil.parseJsonToArray( db, "[{a:1},{b:'foobar'}]" );
+if( l.size() != 2 ){ throw new Exception(); };
+BasicDBObject o = (BasicDBObject)l.get( 0 );
+if( !o.get( "a" ).equals( new Double( 1 ) ) ){ throw new Exception(); }
+BasicDBObject o2 = (BasicDBObject)l.get( 1 );
+if( !o2.get( "b" ).equals( "foobar" ) ){ throw new Exception(); }
+}
+
+{
+BasicDBList l = MMongoUtil.parseJsonToArray( db, "[{a:1},\r\n{b:\t'foobar'}]" );
+if( l.size() != 2 ){ throw new Exception(); };
+BasicDBObject o = (BasicDBObject)l.get( 0 );
+if( !o.get( "a" ).equals( new Double( 1 ) ) ){ throw new Exception(); }
+BasicDBObject o2 = (BasicDBObject)l.get( 1 );
+if( !o2.get( "b" ).equals( "foobar" ) ){ throw new Exception(); }
+}
 }
 //--------------------------------------------------------------------------------
 public static void testSort()

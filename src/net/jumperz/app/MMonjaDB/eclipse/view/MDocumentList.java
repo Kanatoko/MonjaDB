@@ -6,6 +6,7 @@ import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
 import org.eclipse.jface.action.*;
+import org.eclipse.jface.dialogs.DialogMessageArea;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.custom.TableEditor;
@@ -71,7 +72,8 @@ private Action copyFieldAction;
 private Action copyAsJsonAction;
 private Action copyAsStringAction;
 private Action removeAction;
-private Action insertAction;
+private Action insertBlankAction;
+private Action insertJsonAction;
 private Action reloadAction;
 private Action forwardAction;
 private Action backAction;
@@ -293,7 +295,25 @@ for( int i = 0; i < copiedDocumentList.size(); ++i )
 dataManager.reloadDocument();
 }
 //--------------------------------------------------------------------------------
-private void insert()
+private void insertJsonDocument()
+{
+Map dialogData = new HashMap();
+MInsertJsonDialog dialog = new MInsertJsonDialog( shell, dialogData );
+int result = dialog.open();
+
+if( dialogData.containsKey( "json" ) )
+	{
+	String jsonStr = ( String )dialogData.get( "json" );
+	BasicDBList list = MMongoUtil.parseJsonToArray( dataManager.getDB(), jsonStr );
+	for( int i = 0; i < list.size(); ++i )
+		{
+		executeAction( "db." + collName + ".insert(" + MMongoUtil.toJson( dataManager.getDB(), list.get( i ), true ) + ")" );
+		}
+	reload();
+	}
+}
+//--------------------------------------------------------------------------------
+private void insertBlankDocument()
 {
 executeAction( "db." + collName + ".insert({})" );
 reload();
@@ -389,13 +409,22 @@ setActionImage( pasteAction, "page_white_paste_table.png" );
 menuManager.add( pasteAction );
 }
 
-{	//insertAction
-insertAction = new Action(){ public void run() { //--------
-insert();
+{	//insertBlankAction
+insertBlankAction = new Action(){ public void run() { //--------
+insertBlankDocument();
 }};//-----
-insertAction.setText( "Insert" );
-setActionImage( insertAction, "table_add.png" );
-menuManager.add( insertAction );
+insertBlankAction.setText( "Insert Blank Document" );
+setActionImage( insertBlankAction, "table_add.png" );
+menuManager.add( insertBlankAction );
+}
+
+{	//insertJsonAction
+insertJsonAction = new Action(){ public void run() { //--------
+insertJsonDocument();
+}};//-----
+insertJsonAction.setText( "Insert JSON" );
+setActionImage( insertJsonAction, "table_add.png" );
+menuManager.add( insertJsonAction );
 }
 
 menuManager.add( new Separator() );
@@ -676,6 +705,15 @@ copyAsStringAction.setEnabled( multiItem || oneItem );
 copyAction.setEnabled( multiItem || oneItem );
 pasteAction.setEnabled( dataManager.getCopiedDocumentList().size() > 0 );
 removeAction.setEnabled( multiItem || oneItem );
+
+boolean collSelected = false;
+debug( dataManager.getCollName() );
+if( dataManager.isConnected() && dataManager.getCollName() != null && dataManager.getCollName().length() > 0 )
+	{
+	collSelected = true;
+	}
+insertBlankAction.setEnabled( collSelected );
+insertJsonAction.setEnabled( collSelected );
 }
 //--------------------------------------------------------------------------------
 private void updateDocument( TableItem item, int columnIndex, Class clazz, String value )

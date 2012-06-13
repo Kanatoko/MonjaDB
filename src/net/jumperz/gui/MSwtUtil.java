@@ -178,6 +178,7 @@ Clipboard clipboard = new Clipboard( display );
 TextTransfer textTransfer = TextTransfer.getInstance();
 clipboard.setContents(new Object[]{ s }, new Transfer[]{ textTransfer } );
 clipboard.dispose();
+
 /*
  	Clipboard clipboard = new Clipboard(display);
 		String textData = "Hello World";

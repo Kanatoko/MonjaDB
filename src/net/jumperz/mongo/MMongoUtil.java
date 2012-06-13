@@ -104,6 +104,39 @@ else
 	}
 }
 //--------------------------------------------------------------------------------
+public static BasicDBList parseJsonToArray( DB db, String jsonStr )
+{
+int index1 = jsonStr.indexOf( '{' );
+int index2 = jsonStr.indexOf( '[' );
+if( index1 == -1 )
+	{
+		//invalid json
+	return new BasicDBList();
+	}
+else
+	{
+	if( index2 == -1 )
+		{
+		jsonStr = "[" + jsonStr + "]";
+		}
+	else
+		{
+		if( index2 < index1 )
+			{
+				//array do nothing
+			}
+		else
+			{
+			jsonStr = "[" + jsonStr + "]";
+			}
+		}
+	}
+	
+jsonStr = jsonStr.replaceAll( "\n|\r|\t", "" );
+Object o = db.eval( jsonStr, null );
+return ( BasicDBList )o;
+}
+//--------------------------------------------------------------------------------
 public static MFindQuery parseFindQuery( DB db, String findQueryStr )
 throws IOException
 {
