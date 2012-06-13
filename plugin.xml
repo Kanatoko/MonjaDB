@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="MonjaDB.category1"
+            name="MonjaDB">
+      </category>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MDBTree"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/database_gear.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MDBTree"
+            name="DB Tree"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MActionView"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/cog_start.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MActionView"
+            name="Actions"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MDBList"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/database.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MDBList"
+            name="DB List"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MCollectionList"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/table_multiple.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MCollectionList"
+            name="Collection List"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MDocumentList"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/table.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MDocumentList"
+            name="Document List"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MDocumentEditor"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/table_edit.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MDocumentEditor"
+            name="Document Editor"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MSavedActionsView"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/cog.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MSavedActionsView"
+            name="Saved Actions"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MJsonView"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/text_list_bullets.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MJsonView"
+            name="JSON"
+            restorable="true">
+      </view>
+      <view
+            category="MonjaDB.category1"
+            class="net.jumperz.app.MMonjaDB.eclipse.view.MJavaScriptView"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/database_go.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.view.MJavaScriptView"
+            name="JavaScript on MongoDB Server"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="net.jumperz.app.MMonjaDB.eclipse.pref.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="net.jumperz.app.MMonjaDB.eclipse.pref.MPrefPage"
+            id="net.jumperz.app.MMonjaDB.eclipse.pref.MPrefPage"
+            name="MonjaDB">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="MonjaDB.TopMenu"
+            name="MonjaDB">
+      </category>
+      <command
+            categoryId="MonjaDB.TopMenu"
+            defaultHandler="net.jumperz.app.MMonjaDB.eclipse.handler.MActivationHandler"
+            id="MonjaDB.activateCommand"
+            name="Open MonjaDB Perspective">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               label="MonjaDB">
+            <command
+                  commandId="MonjaDB.activateCommand"
+                  style="push">
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="net.jumperz.app.MMonjaDB.eclipse.MPerspectiveFactory1"
+            icon="src/net/jumperz/app/MMonjaDB/eclipse/resources/arrow_nsew.png"
+            id="net.jumperz.app.MMonjaDB.eclipse.MPerspectiveFactory1"
+            name="MonjaDB">
+      </perspective>
+   </extension>
+
+</plugin>

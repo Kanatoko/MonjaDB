@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: MonjaDB
+Bundle-SymbolicName: net.jumperz.app.MMonjaDB;singleton:=true
+Bundle-Version: 1.0.1.qualifier
+Bundle-Activator: net.jumperz.app.MMonjaDB.eclipse.Activator
+Bundle-Vendor: JUMPERZ.NET
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.console
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: bin/,
+ lib/mongo-2.7.2.jar,
+ lib/jsch-0.1.46.jar

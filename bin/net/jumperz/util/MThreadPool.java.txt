@@ -1,0 +1,132 @@
+package net.jumperz.util;
+
+import java.util.*;
+
+public final class MThreadPool
+{
+private static final int DEFAULT_THREAD_COUNT = 20;
+private List waitingThreadList;
+private List runningThreadList;
+private List commandList;
+private boolean stopped = false;
+private int maxThreadCount = 0;
+//---------------------------------------------------------------
+public MThreadPool( int threadCount )
+{
+init( threadCount );
+}
+//---------------------------------------------------------------
+public MThreadPool()
+{
+init( DEFAULT_THREAD_COUNT );
+}
+//---------------------------------------------------------------
+private void init( int threadCount )
+{
+waitingThreadList	= new ArrayList();
+runningThreadList	= new ArrayList();
+commandList		= new ArrayList();
+
+	//create worker threads
+for( int i = 0; i < threadCount; ++i )
+	{
+	waitingThreadList.add( new MWorkerThread( this ) );
+	}
+}
+//---------------------------------------------------------------
+private final synchronized void doIt()
+{
+//MLogger.getInstance().Log( CommandList.size() + ":" + waitingThreadList.size() );
+if( commandList.size() > 0 
+ &&  waitingThreadList.size() > 0
+  )
+  	{
+	int lastCommandIndex	= commandList.size()		- 1;
+	int lastThreadIndex	= waitingThreadList.size()	- 1;
+
+	MCommand command = ( MCommand )commandList.get( lastCommandIndex );
+	commandList.remove( lastCommandIndex );
+
+	MWorkerThread workerThread = ( MWorkerThread )waitingThreadList.get( lastThreadIndex );
+	waitingThreadList.remove( lastThreadIndex );
+	runningThreadList.add( workerThread );
+
+	workerThread.setCommand( command );
+	//System.out.println( command );
+	workerThread.resumeThread();
+	}
+
+int count = runningThreadList.size();
+if( count > maxThreadCount )
+	{
+	MLogger.getInstance().Log( "maxThreadCount::" + count );
+	maxThreadCount = count;
+	}
+}
+//---------------------------------------------------------------
+public final synchronized void addCommand( MCommand command )
+{
+commandList.add( command );
+System.err.println( commandList.size() );
+doIt();
+}
+//---------------------------------------------------------------
+public final synchronized void setThreadWait( MWorkerThread workerThread )
+{
+runningThreadList.remove( workerThread );
+
+if( stopped )
+	{
+	workerThread.terminate();
+	workerThread.resumeThread();
+	}
+else
+	{	
+	waitingThreadList.add( workerThread );
+	doIt();
+	}
+}
+//---------------------------------------------------------------
+public final synchronized void stop()
+{
+if( stopped )
+	{
+	return;
+	}
+
+stopped = true;
+
+	//stop waiting threads
+while( !waitingThreadList.isEmpty() )
+	{
+	MWorkerThread workerThread = ( MWorkerThread )waitingThreadList.get( 0 );
+	waitingThreadList.remove( 0 );
+	workerThread.terminate();
+	workerThread.resumeThread();
+	}
+
+	//stop running threads
+while( !runningThreadList.isEmpty() )
+	{
+	MWorkerThread workerThread = ( MWorkerThread )runningThreadList.get( 0 );
+	runningThreadList.remove( 0 );
+	workerThread.breakThread();
+	}	
+}
+//---------------------------------------------------------------
+public int getRunningThreadCount()
+{
+return runningThreadList.size();
+}
+//---------------------------------------------------------------
+public int getWaitingThreadCount()
+{
+return waitingThreadList.size();
+}
+//---------------------------------------------------------------
+public int getCommandCount()
+{
+return commandList.size();
+}
+//--------------------------------------------------------------------------------
+}

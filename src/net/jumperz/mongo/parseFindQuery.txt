@@ -1,0 +1,35 @@
+var a =	{
+	invoked : [],
+	findArg : []
+	};
+a.find = function()
+	{
+	this.invoked.push( 'find' );
+	//this.debug = arguments.length;
+	for( var i = 0; i < arguments.length; ++i )
+		{
+		this.findArg[ i ] = arguments[ i ];
+		}
+	return this;
+	};
+a.skip = function()
+	{
+	this.invoked.push( 'skip' );
+	this.skipArg = arguments[ 0 ];
+	return this;
+	};
+a.limit = function()
+	{
+	this.invoked.push( 'limit' );
+	this.limitArg = arguments[ 0 ];
+	return this;
+	};
+a.sort = function()
+	{
+	this.invoked.push( 'sort' );
+	this.sortArg = arguments[ 0 ];
+	return this;
+	};
+
+//_QUERY_
+return a;
