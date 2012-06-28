@@ -346,6 +346,7 @@ historyCombo = new Combo(parent, SWT.NONE);
 historyCombo.setToolTipText("Find Query. Hit Enter to apply.");
 historyCombo.addKeyListener(new KeyAdapter() {
 	public void keyPressed(KeyEvent e) {
+	//debug( e );
 	if( e.keyCode == 13 )
 		{
 		String text = historyCombo.getText();
