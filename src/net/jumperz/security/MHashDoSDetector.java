@@ -1,7 +1,6 @@
 package net.jumperz.security;
 
 import java.util.*;
-import java.util.logging.Logger;
 
 public class MHashDoSDetector
 {
@@ -9,7 +8,7 @@ public static final int UNKNOWN	= 0;
 public static final int GOOD	= 1;
 public static final int BAD	= 2;
 
-public static float threshold = 0.90f;
+public static float threshold = 0.98f;
 
 private Set hashSet1 = new HashSet();
 private Set hashSet2 = new HashSet();
@@ -79,18 +78,13 @@ if( uniqueParameterCount < 500 )
 	}
 else
 	{
-	/*
-			System.out.println( "===========" );
-			System.out.println( uniqueParameterCount + "/" + hashSet1.size() );
-			System.out.println( uniqueParameterCount + "/" + hashSet2.size() );
-			System.out.println( uniqueParameterCount + "/" + hashSet3.size() );
-			
-	
-			System.out.println( ( (float)hashSet1.size() / (float)uniqueParameterCount ) );
-			System.out.println( ( (float)hashSet2.size() / (float)uniqueParameterCount ) );
-			System.out.println( ( (float)hashSet3.size() / (float)uniqueParameterCount ) );
-	*/
-			
+	java.text.NumberFormat format = new java.text.DecimalFormat( "0.0000" );
+
+	System.err.println( "----" );
+	System.err.println( format.format( (float)hashSet1.size() / (float)uniqueParameterCount ) ) ;
+	System.err.println( format.format( (float)hashSet2.size() / (float)uniqueParameterCount ) ) ;
+	System.err.println( format.format( (float)hashSet3.size() / (float)uniqueParameterCount ) ) ;
+
 	if( ( (float)hashSet1.size() / (float)uniqueParameterCount ) <= threshold
 	 || ( (float)hashSet2.size() / (float)uniqueParameterCount ) <= threshold
 	 || ( (float)hashSet3.size() / (float)uniqueParameterCount ) <= threshold
