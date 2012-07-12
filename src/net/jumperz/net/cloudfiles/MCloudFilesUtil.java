@@ -13,11 +13,33 @@ public class MCloudFilesUtil
 public static MHttpRequest getUploadRequest( String containerName, String objectPath, int contentLength, Map metaData, MRequestUri storageUrl, String authToken )
 throws IOException
 {
+return getUploadRequest( containerName, objectPath, contentLength, metaData, storageUrl, authToken, null );
+}
+//--------------------------------------------------------------------------------
+public static MHttpRequest getDeleteRequest( String containerName, String objectPath, MRequestUri storageUrl, String authToken )
+throws IOException
+{
+MHttpRequest request = new MHttpRequest( "DELETE " + storageUrl.getPath() + "/" + containerName + objectPath + " HTTP/1.1\r\n\r\n" );
+request.setHeaderValue( "Host", storageUrl.getHost() );
+request.setHeaderValue( "Connection", "close" );
+request.setHeaderValue( "X-Auth-Token", authToken );
+
+return request;
+
+}
+//--------------------------------------------------------------------------------
+public static MHttpRequest getUploadRequest( String containerName, String objectPath, int contentLength, Map metaData, MRequestUri storageUrl, String authToken, String contentType )
+throws IOException
+{
 MHttpRequest request = new MHttpRequest( "PUT " + storageUrl.getPath() + "/" + containerName + objectPath + " HTTP/1.1\r\n\r\n" );
 request.setHeaderValue( "Host", storageUrl.getHost() );
 request.setHeaderValue( "Connection", "close" );
 request.setHeaderValue( "X-Auth-Token", authToken );
 request.setHeaderValue( "Content-Length", contentLength + "" );
+if( contentType != null )
+	{
+	request.setHeaderValue( "Content-Type", contentType );
+	}
 
 Set keySet = metaData.keySet();
 Iterator p = keySet.iterator();

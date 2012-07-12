@@ -12,9 +12,11 @@ public static boolean debug = true;
 
 private static MCloudFilesContext instance = new MCloudFilesContext();
 
-private volatile int status = CFILES_STATUS_NO_AUTH;
+private volatile int authState = CFILES_STATE_NO_AUTH;
 private volatile int errorStatus = CFILES_ERROR_STATUS_DEFAULT;
 private volatile int errorCount = 0;
+
+private long lastAuth;
 
 private volatile String authUser;
 private volatile String authKey;
@@ -23,7 +25,7 @@ private volatile String authToken;
 private volatile String serverManagementUrl;
 private volatile String storageToken;
 private volatile MRequestUri cdnManagementUrl;
-private volatile MHttpResponse authResponse;
+//private volatile MHttpResponse authResponse;
 //--------------------------------------------------------------------------------
 public boolean available()
 {
@@ -41,9 +43,37 @@ if( !available() )
 	{
 	throw new MCloudFilesException( "CloudFiles is not available now." );
 	}
-if( status == CFILES_STATUS_NO_AUTH )
+if( authState == CFILES_STATE_NO_AUTH )
 	{
-	auth();
+	auth( false );
+	}
+
+long now = System.currentTimeMillis();
+if( ( now - lastAuth ) > 1000 * 60 * 60 * 23 )
+	{
+	debug( "23 hours passed. getting new auth token." );
+	auth( true );
+	}
+}
+//--------------------------------------------------------------------------------
+public void deleteObject( String containerName, String objectPath )
+throws IOException
+{
+checkStatus();
+
+MHttpRequest request = MCloudFilesUtil.getDeleteRequest( containerName, objectPath, storageUrl, authToken );
+MHttpResponse response = MCloudFilesUtil.sendRequest( request );
+debug( response );
+
+if( response.getStatusCode() == 204 )
+	{
+	onSuccess();
+	}
+else
+	{
+	onError();
+	warn( response );
+	throw new MCloudFilesException( "delete failed." );
 	}
 }
 //--------------------------------------------------------------------------------
@@ -52,6 +82,8 @@ throws IOException
 {
 checkStatus();
 
+objectResponse.chunkToNormal();
+
 if( !objectResponse.hasBody() )
 	{
 	throw new MCloudFilesException( "Object has no body." );
@@ -59,7 +91,13 @@ if( !objectResponse.hasBody() )
 
 int contentLength = objectResponse.getBodySize();
 
-MHttpRequest request = MCloudFilesUtil.getUploadRequest( containerName, objectPath, contentLength, metaData, storageUrl, authToken ); 
+String contentType = null;
+if( objectResponse.headerExists( "Content-Type" ) )
+	{
+	contentType = objectResponse.getHeaderValue( "Content-Type" );	
+	}
+
+MHttpRequest request = MCloudFilesUtil.getUploadRequest( containerName, objectPath, contentLength, metaData, storageUrl, authToken, contentType ); 
 MHttpResponse response = MCloudFilesUtil.sendRequestWithBodyStream( request, objectResponse.getBodyInputStream() );
 debug( response );
 
@@ -71,7 +109,7 @@ else
 	{
 	onError();
 	warn( response );
-	throw new MCloudFilesException( "container cdn enabled failed." );
+	throw new MCloudFilesException( "upload failed." );
 	}
 }
 //--------------------------------------------------------------------------------
@@ -128,6 +166,16 @@ createContainer( containerName, new HashMap() );
 //--------------------------------------------------------------------------------
 private void onError()
 {
+	//try auth again
+try
+	{
+	auth( true );
+	}
+catch( Exception e )
+	{
+	info( e );
+	}
+
 ++ errorCount;
 if( errorCount > CFILES_MAX_ALLOWED_ERROR )
 	{
@@ -141,11 +189,21 @@ errorCount = 0;
 errorStatus = CFILES_ERROR_STATUS_OK;
 }
 //--------------------------------------------------------------------------------
-private synchronized void auth()
+private synchronized void auth( boolean force )
 throws IOException
 {
+debug( "auth:" + authState );
+if( authState == CFILES_STATE_AUTH_OK
+ && force == false
+  )
+	{
+	debug( "auth passed" );
+	return;
+	}
+
 MHttpRequest request = MCloudFilesUtil.getAuthRequest( authUser, authKey );
-authResponse = MCloudFilesUtil.sendRequest( request );
+MHttpResponse authResponse = MCloudFilesUtil.sendRequest( request );
+debug( authResponse );
 
 if( authResponse.getStatusCode() == 204 )
 	{
@@ -155,7 +213,8 @@ if( authResponse.getStatusCode() == 204 )
 	serverManagementUrl	= authResponse.getHeaderValue( "X-Server-Management-Url" );
 	storageToken		= authResponse.getHeaderValue( "X-Storage-Token" );
 	cdnManagementUrl	= new MRequestUri ( authResponse.getHeaderValue( "X-CDN-Management-Url" ) );
-	status = CFILES_STATUS_AUTH_OK;
+	authState = CFILES_STATE_AUTH_OK;
+	lastAuth		= System.currentTimeMillis();
 	}
 else
 	{
@@ -247,7 +306,7 @@ authKey = s;
 //--------------------------------------------------------------------------------
 public int getStatus()
 {
-return status;
+return authState;
 }
 
 // --------------------------------------------------------------------------------

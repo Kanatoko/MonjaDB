@@ -33,6 +33,12 @@ threadPool = new MThreadPool( 1 );
 addCommand( command );
 }
 //--------------------------------------------------------------------------------
+public MAsyncCommandManager( List _commandList )
+{
+threadPool = new MThreadPool( _commandList.size() );
+addCommand( _commandList );
+}
+//--------------------------------------------------------------------------------
 public MAsyncCommandManager( int threadCount, List _commandList )
 {
 threadPool = new MThreadPool( threadCount );
@@ -261,6 +267,32 @@ synchronized( mutex )
 			}
 		}
 	
+	}
+}
+//--------------------------------------------------------------------------------
+public Map getAllAndStopThreadPool() //main thread
+throws InterruptedException
+{
+if( usingExternalThreadPool )
+	{
+	throw new IllegalStateException( "External Thread Pool." );
+	}
+
+synchronized( mutex )
+	{
+	while( true )
+		{
+		if( commandList.size() == 0 )
+			{
+			Map result = new HashMap( resultMap );
+			threadPool.stop();
+			return result;
+			}
+		else
+			{
+			mutex.wait();
+			}
+		}
 	}
 }
 //--------------------------------------------------------------------------------

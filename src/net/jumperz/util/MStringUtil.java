@@ -192,8 +192,11 @@ public static int parseInt( Object o )
 {
 if( o instanceof Double )
 	{
-	Double d = ( Double )o;
-	return d.intValue();
+	return ( ( Double )o ).intValue();
+	}
+else if( o instanceof Integer )
+	{
+	return ( ( Integer)o ).intValue();
 	}
 return parseInt( o + "" );
 }
