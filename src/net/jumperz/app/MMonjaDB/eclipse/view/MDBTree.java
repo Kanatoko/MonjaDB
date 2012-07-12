@@ -69,7 +69,7 @@ if( selected != null && selected.length == 1 )
 	String treeType = ( String )data.get( data_type );
 	if( treeType.equals( data_type_mongo ) )
 		{
-		
+		executeAction( "show dbs" );
 		}
 	else if ( treeType.equals( data_type_db ) )
 		{
