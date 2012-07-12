@@ -32,6 +32,10 @@ implements MOutputView
 private Tree tree;
 private Action connectAction;
 private Action disconnectAction;
+private Action reloadAction;
+private Action createDbAction;
+private Action removeDbAction;
+
 //--------------------------------------------------------------------------------
 public MDBTree()
 {
@@ -96,6 +100,7 @@ if( selected != null && selected.length == 1 )
 			}
 		}
 	}
+updateGui();
 }
 //--------------------------------------------------------------------------------
 private void onConnect( final MConnectAction ca )
@@ -108,8 +113,21 @@ String dbName = dataManager.getDB().getName();
 java.util.List dbNameList = new ArrayList();
 dbNameList.add( dbName );
 drawDbItems( dbNameList );
+
+updateGui();
 //actionManager.executeAction( "use " + dbName );
 
+}
+//--------------------------------------------------------------------------------
+private void updateGui()
+{
+boolean hasItem = false;
+if( tree.getItemCount() > 0 )
+	{
+	hasItem = true;
+	}
+
+reloadAction.setEnabled( hasItem );
 }
 //--------------------------------------------------------------------------------
 private void drawRootItem( final MConnectAction ca )
@@ -353,6 +371,7 @@ tree.removeAll();
 connectAction.setEnabled( true );
 disconnectAction.setEnabled( false );
 
+updateGui();
 }});//*****
 
 }
@@ -431,6 +450,14 @@ initAction( connectAction, "server_lightning.png", menuManager );
 initAction( disconnectAction, "server_delete.png", menuManager );
 
 disconnectAction.setEnabled( false );
+
+reloadAction = new Action(){ public void run(){//-----------
+executeAction( "show dbs" );
+}};//-----------
+reloadAction.setToolTipText( "Reload Databases ( show dbs  )" );
+reloadAction.setText( "Reload Databases" );
+initAction( reloadAction, "arrow_refresh.png", menuManager );
+reloadAction.setEnabled( false );
 
 	//listeners
 tree.addListener( SWT.MouseDoubleClick, this );
