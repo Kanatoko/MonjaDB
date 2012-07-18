@@ -44,5 +44,14 @@
 				<arguments>1.0-name-matches-true-false-MRrdUtil.java</arguments>
 			</matcher>
 		</filter>
+		<filter>
+			<id>1342590293845</id>
+			<name>src/net/jumperz/net/dozens</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-true-.*</arguments>
+			</matcher>
+		</filter>
 	</filteredResources>
 </projectDescription>

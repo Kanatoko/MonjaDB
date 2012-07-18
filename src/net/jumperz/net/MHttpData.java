@@ -90,7 +90,13 @@ public final void addHeaderValue( String name, String value )
 {
 if( name != null && value != null )
 	{
-	headerList.add( name + ": " + value );
+	StringBuffer buf = new StringBuffer( 128 );
+	buf.append( name );
+	buf.append( ": " );
+	buf.append( value );
+	String newHeader = buf.toString();
+	headerList.add( newHeader );
+	headerLength += newHeader.length() + CRLF.length;
 	}
 }
 // --------------------------------------------------------------------------------
@@ -100,6 +106,7 @@ if( header != null )
 	{
 	headerList.add( header );
 	}
+headerLength += header.length() + CRLF.length;
 }
 //-------------------------------------------------------------------------------------------
 public synchronized final void setHeaderValue( String name, String value )
@@ -128,7 +135,7 @@ else
 	headerList.add( name + ": " + value );
 	}
 
-
+refreshHeaderSize();
 /*
 removeHeaderValue( name );
 headerList.add( name + ": " + value );
@@ -201,6 +208,7 @@ for( int i = 0; i < count; ++i )
 		headerList.remove( i );
 		--count;
 		--i;
+		headerLength -= header.length() + CRLF.length;
 		}
 	}
 }
@@ -720,10 +728,13 @@ public final List getHeaderList()
 return new ArrayList( headerList );
 }
 //--------------------------------------------------------------------------------
+/*
 public final void setHeaderList( List list )
 {
 headerList = list;
+refreshHeaderSize();
 }
+*/
 //-------------------------------------------------------------------------------
 public final boolean hasBody()
 {
@@ -791,6 +802,11 @@ catch( IOException e )
 	e.printStackTrace();
 	}
 return baos;
+}
+//--------------------------------------------------------------------------------
+public void refreshHeaderSize()
+{
+headerLength = this.getHeaderAsString().length();
 }
 //--------------------------------------------------------------------------------
 public String toString( String enc )

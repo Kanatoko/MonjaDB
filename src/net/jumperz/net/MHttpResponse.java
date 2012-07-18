@@ -26,6 +26,8 @@ public MHttpResponse()
 statusCode	= DEFAULT_STATUS_CODE;
 version		= DEFAULT_VERSION;
 reasonPhrase	= DEFAULT_REASON_PHRASE;
+
+refreshHeaderSize();
 }
 // --------------------------------------------------------------------------------
 public MHttpResponse( byte[] buffer )
@@ -105,6 +107,8 @@ splitStatusLine( line );
 private void splitStatusLine( String line )
 throws IOException
 {
+boolean wasNull = ( version == null );
+
 int spaceIndex = line.indexOf( ' ' );
 if( spaceIndex <= 0 )
 	{
@@ -144,36 +148,10 @@ else
 	reasonPhrase = line.substring( spaceIndex + 5 );
 	}
 
-/*
-String[] statusLineArray = line.split( " " );
-if( statusLineArray.length < 3 )
+if( !wasNull )
 	{
-	throw new MHttpIOException( "Invalid status line:" + line );
+	refreshHeaderSize();
 	}
-
-version = statusLineArray[ 0 ];
-
-statusCode = Integer.parseInt( statusLineArray[ 1 ] );
-
-if( statusCode < 200 
- || statusCode == 304
- || statusCode == 204
-  )
-	{
-	hasBodyFlag = false;
-	}
-
-StringBuffer strBuf = new StringBuffer();
-for( int i = 2; i < statusLineArray.length; ++i )
-	{
-	if( i != 2 )
-		{
-		strBuf.append( " " );
-		}
-	strBuf.append( statusLineArray[ i ] );
-	}
-reasonPhrase = strBuf.toString();
-*/
 }
 //-------------------------------------------------------------------------------------------
 public final int getStatusCode()
@@ -206,9 +184,10 @@ try
 		// blank line
 	buf.write( CRLF );
 	}
-catch( IOException e )
+catch( Exception e )
 	{
 	e.printStackTrace();
+	return new byte[]{};
 	}
 return buf.toByteArray();
 }
@@ -411,16 +390,16 @@ public String getVersion() {
 	return version;
 }
 
+/*
 public void setReasonPhrase(String string) {
 	reasonPhrase = string;
 }
-
 public void setStatusCode(int i) {
 	statusCode = i;
 }
-
 public void setVersion(String string) {
 	version = string;
 }
+*/
 
 }

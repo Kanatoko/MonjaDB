@@ -64,6 +64,8 @@ methodType	= DEFAULT_METHOD_TYPE;
 method		= DEFAULT_METHOD;
 uri		= DEFAULT_URI;
 version		= DEFAULT_VERSION;
+
+refreshHeaderSize();
 }
 //--------------------------------------------------------------------------------
 public MHttpRequest( String s )
@@ -415,33 +417,7 @@ setMethod( method );
 uri	= requestLineArray[ 1 ];
 version	= requestLineArray[ 2 ];
 }
-//--------------------------------------------------------------------------------
-public static void testHasValidBodyState()
-throws Exception
-{
-MHttpRequest request = new MHttpRequest( "POST /index.php HTTP/1.1\r\n"
- + "Host: www.jumperz.net\r\n"
- + "User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; ja; rv:1.9.0.13) Gecko/2009080315 Ubuntu/9.04 (jaunty) Firefox/3.0.13\r\n"
- + "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
- + "Accept-Language: ja,en-us;q=0.7,en;q=0.3\r\n"
- + "Accept-Charset: Shift_JIS,utf-8;q=0.7,*;q=0.7\r\n"
- + "Keep-Alive: 300\r\n"
- + "Referer: http://www.jumperz.net/index.php?i=4\r\n"
- + "Cookie: JSESSIONID=FD4263B711FB3152E7C0193D627DBD5C\r\n"
- + "Content-Type: application/x-www-form-urlencoded\r\n"
- + "Content-Length: 31\r\n"
- + "Connection: keep-alive\r\n"
- + "\r\n" );
-
-if( request.isInvalidPostState() != true ) { throw new Exception(); }
-
-request.setBody("i=5&bazz=%82%A0&title=&message=" );
-
-if( request.isInvalidPostState() != false ) { throw new Exception(); }
-
-request = new MHttpRequest();
-if( request.isInvalidPostState() != false ) { throw new Exception(); }
-}
+/*
 //--------------------------------------------------------------------------------
 public static void main( String[] args )
 throws Exception
@@ -449,6 +425,7 @@ throws Exception
 testHasValidBodyState();
 System.out.println( "OK." );
 }
+*/
 //--------------------------------------------------------------------------------
 public boolean isInvalidPostState()
 throws MHttpIOException
@@ -476,6 +453,7 @@ return methodType;
 public byte[] getHeader()
 {
 ByteArrayOutputStream bufferStream = null;
+byte[] buf = null;
 try
 	{
 		// request line
@@ -497,13 +475,20 @@ try
 	
 		// blank line
 	bufferStream.write( CRLF );
+	
+	buf = bufferStream.toByteArray();
 	}
-catch( IOException e )
+catch( Exception e )
 	{
 	//MLogger.getInstance().Log( e.toString() );
 	e.printStackTrace();
+	buf = new byte[]{};
 	}
-return bufferStream.toByteArray();
+finally
+	{
+	MStreamUtil.closeStream( bufferStream );
+	}
+return buf;
 }
 //-------------------------------------------------------------------------------
 public String getUri()
@@ -527,10 +512,13 @@ this.uri = uri;
 uriParameterList = new ArrayList();
 parseParametersImpl2( new MRequestUri( uri ).getQuery(), MAbstractParameter.URI );
 parseParam2();
+
+refreshHeaderSize();
 }
 //-------------------------------------------------------------------------------
 public void setMethod( String in_method )
 {
+boolean wasNull = ( method == null );
 method = in_method;
 
 if( method.equals( "GET" ) )
@@ -569,6 +557,11 @@ else if( method.equals( "OPTIONS" ) )
 else
 	{
 	methodType = OTHER;
+	}
+
+if( !wasNull )
+	{
+	refreshHeaderSize();
 	}
 }
 // --------------------------------------------------------------------------------
@@ -884,11 +877,13 @@ else if( type == MAbstractParameter.MULTIPART )
 	multipartParameterList = l;
 	}
 }
+/*
 // --------------------------------------------------------------------------------
 public void setParam2List( List l )
 {
 param2List = l;
 }
+*/
 // --------------------------------------------------------------------------------
 public void applyParameterList( int type )
 throws IOException
@@ -1005,10 +1000,12 @@ public void setMultipartParameterList( List multipartParameterList )
 this.multipartParameterList = multipartParameterList;
 }
 // --------------------------------------------------------------------------------
+/*
 public void setUriParameterList( List uriParameterList )
 {
 this.uriParameterList = uriParameterList;
 }
+*/
 // --------------------------------------------------------------------------------
 public boolean isMultipartRequest()
 {
