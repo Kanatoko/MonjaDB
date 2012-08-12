@@ -14,7 +14,6 @@ objectQueue.addLast( o );
 //--------------------------------------------------------------------------------
 public Object getObject()
 {
-//System.out.println( "--1--:" +objectQueue.size() + ":" + threadQueue.size() );
 while( true )
 	{
 	synchronized( objectQueue )
@@ -51,7 +50,6 @@ while( true )
 //--------------------------------------------------------------------------------
 public void returnObject( Object o )
 {
-//System.out.println( "--2--:" + objectQueue.size() + ":" + threadQueue.size() );
 synchronized( objectQueue )
 	{
 	objectQueue.addLast( o );

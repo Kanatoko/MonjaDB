@@ -16,6 +16,17 @@ throws IOException
 return getUploadRequest( containerName, objectPath, contentLength, metaData, storageUrl, authToken, null );
 }
 //--------------------------------------------------------------------------------
+public static MHttpRequest getListRequest( String containerName, MRequestUri storageUrl, String authToken )
+throws IOException
+{
+MHttpRequest request = new MHttpRequest( "GET " + storageUrl.getPath() + "/" + containerName +  " HTTP/1.1\r\n\r\n" );
+request.setHeaderValue( "Host", storageUrl.getHost() );
+request.setHeaderValue( "Connection", "close" );
+request.setHeaderValue( "X-Auth-Token", authToken );
+
+return request;
+}
+//--------------------------------------------------------------------------------
 public static MHttpRequest getDeleteRequest( String containerName, String objectPath, MRequestUri storageUrl, String authToken )
 throws IOException
 {

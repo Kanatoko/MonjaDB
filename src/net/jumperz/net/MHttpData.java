@@ -20,7 +20,7 @@ protected static boolean strictDelimiter 		= true;
 
 protected List headerList;
 protected BufferedInputStream bufferedInputStream;
-protected int headerLength = 0;
+protected int headerLengthForStream; // for mark/skip on buffered input stream
 protected int pos;
 protected MBuffer bodyBuffer;
 protected boolean hasBodyFlag = false;
@@ -29,6 +29,8 @@ protected int bodyBufSize = DEFAULT_BODY_BUFSIZE;
 
 public abstract byte[] getHeader();
 protected abstract void recvBodyUntilDisconnected() throws IOException;
+
+private volatile int ownerThreadCount = 1;
 //-------------------------------------------------------------------------------------------
 public MHttpData()
 {
@@ -37,7 +39,7 @@ headerList = new ArrayList();
 // --------------------------------------------------------------------------------
 public int getSize()
 {
-int size = headerLength;
+int size = getHeader().length;
 if( hasBody() )
 	{
 	size += getBodySize();
@@ -67,11 +69,6 @@ else
 	return false;
 	}
 }
-//-------------------------------------------------------------------------------
-public int getHeaderLength()
-{
-return headerLength;
-}
 // --------------------------------------------------------------------------------
 public final String getHeaderAsString()
 {
@@ -90,13 +87,7 @@ public final void addHeaderValue( String name, String value )
 {
 if( name != null && value != null )
 	{
-	StringBuffer buf = new StringBuffer( 128 );
-	buf.append( name );
-	buf.append( ": " );
-	buf.append( value );
-	String newHeader = buf.toString();
-	headerList.add( newHeader );
-	headerLength += newHeader.length() + CRLF.length;
+	headerList.add( name + ": " + value );
 	}
 }
 // --------------------------------------------------------------------------------
@@ -106,7 +97,6 @@ if( header != null )
 	{
 	headerList.add( header );
 	}
-headerLength += header.length() + CRLF.length;
 }
 //-------------------------------------------------------------------------------------------
 public synchronized final void setHeaderValue( String name, String value )
@@ -135,7 +125,7 @@ else
 	headerList.add( name + ": " + value );
 	}
 
-refreshHeaderSize();
+
 /*
 removeHeaderValue( name );
 headerList.add( name + ": " + value );
@@ -208,7 +198,6 @@ for( int i = 0; i < count; ++i )
 		headerList.remove( i );
 		--count;
 		--i;
-		headerLength -= header.length() + CRLF.length;
 		}
 	}
 }
@@ -289,12 +278,12 @@ for( int i = 0;; ++i )
 		throw new IOException( "Invalid HTTP data" );
 		}
 
-	headerLength += line.length() + reader.getLastDelimiterSize();
+	headerLengthForStream += line.length() + reader.getLastDelimiterSize();
 	
 	if( line.equals( "" ) )
 		{
 		bufferedInputStream.reset();
-		bufferedInputStream.skip( headerLength );
+		bufferedInputStream.skip( headerLengthForStream );
 		bufferedInputStream.mark( Integer.MAX_VALUE );
 		break;
 		}
@@ -728,31 +717,55 @@ public final List getHeaderList()
 return new ArrayList( headerList );
 }
 //--------------------------------------------------------------------------------
-/*
 public final void setHeaderList( List list )
 {
 headerList = list;
-refreshHeaderSize();
 }
-*/
 //-------------------------------------------------------------------------------
 public final boolean hasBody()
 {
 return hasBodyFlag;
 }
+//--------------------------------------------------------------------------------
+public final synchronized void addOwner()
+{
+ownerThreadCount++;
+}
 //-------------------------------------------------------------------------------------------
 public final void clear()
 {
+boolean doClear = false;
+synchronized( this )
+	{
+	-- ownerThreadCount;
+	if( ownerThreadCount == 0 )
+		{
+		ownerThreadCount = 1; //reset
+		doClear = true;
+		}
+	}
+
+if( doClear )
+	{
+	if( bodyBuffer != null )
+		{
+		bodyBuffer.clear();	
+		}
+	}
+}
+//--------------------------------------------------------------------------------
+private final void clearFromInside()
+{
 if( bodyBuffer != null )
 	{
-	bodyBuffer.clear();
+	bodyBuffer.clear();	
 	}
 }
 // --------------------------------------------------------------------------------
 public final void setBodyBuffer( MBuffer newBuffer )
 throws IOException
 {
-clear();
+clearFromInside();
 
 bodyBuffer = newBuffer;
 hasBodyFlag = true;
@@ -761,7 +774,7 @@ hasBodyFlag = true;
 public final void setBody( byte[] data )
 throws IOException
 {
-clear();
+clearFromInside();
 
 bodyBuffer = new MBuffer();
 bodyBuffer.write( data );
@@ -802,11 +815,6 @@ catch( IOException e )
 	e.printStackTrace();
 	}
 return baos;
-}
-//--------------------------------------------------------------------------------
-public void refreshHeaderSize()
-{
-headerLength = this.getHeaderAsString().length();
 }
 //--------------------------------------------------------------------------------
 public String toString( String enc )

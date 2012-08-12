@@ -56,16 +56,31 @@ if( ( now - lastAuth ) > 1000 * 60 * 60 * 23 )
 	}
 }
 //--------------------------------------------------------------------------------
+public List getList( String containerName )
+throws IOException
+{
+checkStatus();
+
+MHttpRequest request = MCloudFilesUtil.getListRequest( containerName, storageUrl, authToken );
+MHttpResponse response = MCloudFilesUtil.sendRequest( request );
+
+return Arrays.asList( response.getBodyAsString().split( "(\\r|\\n)+" ) );
+}
+//--------------------------------------------------------------------------------
 public void deleteObject( String containerName, String objectPath )
 throws IOException
 {
 checkStatus();
 
 MHttpRequest request = MCloudFilesUtil.getDeleteRequest( containerName, objectPath, storageUrl, authToken );
+debug( request );
 MHttpResponse response = MCloudFilesUtil.sendRequest( request );
 debug( response );
 
-if( response.getStatusCode() == 204 )
+int statusCode = response.getStatusCode();
+if( statusCode == 204
+ || statusCode == 404
+  )
 	{
 	onSuccess();
 	}
@@ -113,12 +128,12 @@ else
 	}
 }
 //--------------------------------------------------------------------------------
-public Map setContainerCdnEnabled( String containerName )
+public Map setContainerCdnEnabled( String containerName, int ttl )
 throws IOException
 {
 checkStatus();
 
-MHttpRequest request = MCloudFilesUtil.getContainerCdnEnabledRequest( containerName, cdnManagementUrl, authToken, CFILES_DEFAULT_TTL );
+MHttpRequest request = MCloudFilesUtil.getContainerCdnEnabledRequest( containerName, cdnManagementUrl, authToken, ttl );
 MHttpResponse response = MCloudFilesUtil.sendRequest( request );
 debug( response );
 if( response.getStatusCode() == 201 || response.getStatusCode() == 202 )
@@ -136,6 +151,12 @@ else
 	warn( response );
 	throw new MCloudFilesException( "container cdn enabled failed." );
 	}
+}
+//--------------------------------------------------------------------------------
+public Map setContainerCdnEnabled( String containerName )
+throws IOException
+{
+return setContainerCdnEnabled( containerName, CFILES_DEFAULT_TTL );
 }
 //--------------------------------------------------------------------------------
 public void createContainer( String containerName, Map metaData )

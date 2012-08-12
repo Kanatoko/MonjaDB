@@ -26,8 +26,6 @@ public MHttpResponse()
 statusCode	= DEFAULT_STATUS_CODE;
 version		= DEFAULT_VERSION;
 reasonPhrase	= DEFAULT_REASON_PHRASE;
-
-refreshHeaderSize();
 }
 // --------------------------------------------------------------------------------
 public MHttpResponse( byte[] buffer )
@@ -93,7 +91,7 @@ if( line == null )
 	}
 
 splitStatusLine( line );
-headerLength += line.length() + reader.getLastDelimiterSize();
+headerLengthForStream += line.length() + reader.getLastDelimiterSize();
 
 readHeaderFields( reader );
 }
@@ -107,8 +105,6 @@ splitStatusLine( line );
 private void splitStatusLine( String line )
 throws IOException
 {
-boolean wasNull = ( version == null );
-
 int spaceIndex = line.indexOf( ' ' );
 if( spaceIndex <= 0 )
 	{
@@ -148,10 +144,36 @@ else
 	reasonPhrase = line.substring( spaceIndex + 5 );
 	}
 
-if( !wasNull )
+/*
+String[] statusLineArray = line.split( " " );
+if( statusLineArray.length < 3 )
 	{
-	refreshHeaderSize();
+	throw new MHttpIOException( "Invalid status line:" + line );
 	}
+
+version = statusLineArray[ 0 ];
+
+statusCode = Integer.parseInt( statusLineArray[ 1 ] );
+
+if( statusCode < 200 
+ || statusCode == 304
+ || statusCode == 204
+  )
+	{
+	hasBodyFlag = false;
+	}
+
+StringBuffer strBuf = new StringBuffer();
+for( int i = 2; i < statusLineArray.length; ++i )
+	{
+	if( i != 2 )
+		{
+		strBuf.append( " " );
+		}
+	strBuf.append( statusLineArray[ i ] );
+	}
+reasonPhrase = strBuf.toString();
+*/
 }
 //-------------------------------------------------------------------------------------------
 public final int getStatusCode()
@@ -161,35 +183,42 @@ return statusCode;
 //-------------------------------------------------------------------------------
 public final byte[] getHeader()
 {
-ByteArrayOutputStream buf = null;
+ByteArrayOutputStream bufferStream = null;
+byte[] buf = null;
 try
 	{
 		// request line
-	buf = new ByteArrayOutputStream( headerBufSize );
-	buf.write( version.getBytes( MCharset.CS_ISO_8859_1 ) );
-	buf.write( (byte)0x20 );
-	buf.write( Integer.toString( statusCode ).getBytes( MCharset.CS_ISO_8859_1 ) );
-	buf.write( (byte)0x20 );
-	buf.write( reasonPhrase.getBytes( MCharset.CS_ISO_8859_1 ) );
-	buf.write( CRLF );
+	bufferStream = new ByteArrayOutputStream( headerBufSize );
+	bufferStream.write( version.getBytes( MCharset.CS_ISO_8859_1 ) );
+	bufferStream.write( (byte)0x20 );
+	bufferStream.write( Integer.toString( statusCode ).getBytes( MCharset.CS_ISO_8859_1 ) );
+	bufferStream.write( (byte)0x20 );
+	bufferStream.write( reasonPhrase.getBytes( MCharset.CS_ISO_8859_1 ) );
+	bufferStream.write( CRLF );
 	
 		// fields
 	int count = headerList.size();
 	for( int i = 0; i < count; ++i )
 		{
-		buf.write( ( ( String )headerList.get( i ) ).getBytes( MCharset.CS_ISO_8859_1 ) );
-		buf.write( CRLF );
+		bufferStream.write( ( ( String )headerList.get( i ) ).getBytes( MCharset.CS_ISO_8859_1 ) );
+		bufferStream.write( CRLF );
 		}
 	
 		// blank line
-	buf.write( CRLF );
+	bufferStream.write( CRLF );
+	
+	buf = bufferStream.toByteArray();
 	}
 catch( Exception e )
 	{
 	e.printStackTrace();
-	return new byte[]{};
+	buf = new byte[]{};
 	}
-return buf.toByteArray();
+finally
+	{
+	MStreamUtil.closeStream( bufferStream );
+	}
+return buf;
 }
 //-------------------------------------------------------------------------------------------
 public String getStatusLine()
@@ -390,16 +419,16 @@ public String getVersion() {
 	return version;
 }
 
-/*
 public void setReasonPhrase(String string) {
 	reasonPhrase = string;
 }
+
 public void setStatusCode(int i) {
 	statusCode = i;
 }
+
 public void setVersion(String string) {
 	version = string;
 }
-*/
 
 }

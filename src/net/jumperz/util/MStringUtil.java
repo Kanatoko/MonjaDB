@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
 public final class MStringUtil
 {
 private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
-private static final Pattern pattern1 = Pattern.compile( "[^-a-zA-Z0-9!\"#$%&')(*+,./:;<\\]>?@\\[\\\\^_`~|]=" );
+private static final Pattern pattern1 = Pattern.compile( "[^-a-zA-Z0-9!\"#$%&')(*+,./:;<\\]>?@\\[\\\\^_`~|= ]" );
 
 /*
  * * and ?
@@ -181,6 +181,18 @@ if(   simpleMatch( set, "www2.example.jp" ) ){ throw new Exception(); }
 if(   simpleMatch( set, "ww.example.net" ) ){ throw new Exception(); }
 if(   simpleMatch( set, "www.example.com.jp" ) ){ throw new Exception(); }
 }*/
+}
+//--------------------------------------------------------------------------------
+public static boolean isAscii( String s )
+{
+for( int i = 0; i < s.length(); ++i )
+	{
+	if( s.charAt( i ) >= 128 )
+		{
+		return false;
+		}
+	}
+return true;
 }
 // --------------------------------------------------------------------------------
 public static int parseInt( Object o, int defaultValue )
@@ -389,6 +401,178 @@ if( !containsTwoWordIgnoreCase( "Hoge Fuga", "hoge", "fuga" ) ){ throw new Excep
 if( !containsTwoWordIgnoreCase( "Hoge Fuga", "hoge", "fUga" ) ){ throw new Exception(); }
 if( !containsTwoWordIgnoreCase( "Hoge Fuga", "hogE", "fUga" ) ){ throw new Exception(); }
 if( !containsTwoWordIgnoreCase( "gyoe hoge fuga", "hoge", "fuga" ) ){ throw new Exception(); }
+}
+//--------------------------------------------------------------------------------
+private static void testIndexOfIgnoreCase()
+throws Exception
+{
+if( indexOfIgnoreCase( "fuga fuga", "fuga" ) != 0 ){ ex(); }
+if( indexOfIgnoreCase( "fug", "fuga" ) != -1 ){ ex(); }
+if( indexOfIgnoreCase( "fugaa", "fuga" ) != 0 ){ ex(); }
+if( indexOfIgnoreCase( "hoge fuga", "fuga" ) != 5 ){ ex(); }
+if( indexOfIgnoreCase( "hogea fuga", "fuga" ) != 6 ){ ex(); }
+if( indexOfIgnoreCase( "hogeaa fuga", "fuga" ) != 7 ){ ex(); }
+
+if( indexOfIgnoreCase( "fuga fuga", "FUGA" ) != 0 ){ ex(); }
+if( indexOfIgnoreCase( "fug", "FUGA" ) != -1 ){ ex(); }
+if( indexOfIgnoreCase( "fugaa", "FUGA" ) != 0 ){ ex(); }
+if( indexOfIgnoreCase( "hoge fuga", "FUGA" ) != 5 ){ ex(); }
+if( indexOfIgnoreCase( "hogea fuga", "FUGA" ) != 6 ){ ex(); }
+if( indexOfIgnoreCase( "hogeaa fuga", "FUGA" ) != 7 ){ ex(); }
+
+if( indexOfIgnoreCase( "FUGA FUGA", "fuga" ) != 0 ){ ex(); }
+if( indexOfIgnoreCase( "FUG", "fuga" ) != -1 ){ ex(); }
+if( indexOfIgnoreCase( "FUGAA", "fuga" ) != 0 ){ ex(); }
+if( indexOfIgnoreCase( "HOGE FUGA", "fuga" ) != 5 ){ ex(); }
+if( indexOfIgnoreCase( "HOGEA FUGA", "fuga" ) != 6 ){ ex(); }
+if( indexOfIgnoreCase( "HOGEAA FUGA", "fuga" ) != 7 ){ ex(); }
+}
+//--------------------------------------------------------------------------------
+private static void testIndexOf3()
+throws Exception
+{
+if( indexOf3( "fuga fuga", "fuga" ) != 0 ){ ex(); }
+if( indexOf3( "fug", "fuga" ) != -1 ){ ex(); }
+if( indexOf3( "fugaa", "fuga" ) != 0 ){ ex(); }
+if( indexOf3( "hoge fuga", "fuga" ) != 5 ){ ex(); }
+if( indexOf3( "hogea fuga", "fuga" ) != 6 ){ ex(); }
+if( indexOf3( "hogeaa fuga", "fuga" ) != 7 ){ ex(); }
+if( indexOf3( "hogeaa fug", "fuga" ) != -1 ){ ex(); }
+
+if( indexOf3( "hogeaa fug fuga", "fuga" ) != 11 ){ ex(); }
+if( indexOf3( "hogeaa fug fuGa", "Fuga" ) != 11 ){ ex(); }
+if( indexOf3( "hogeaa fug fUga", "fugA" ) != 11 ){ ex(); }
+
+if( indexOf3( "fuga fuga", "FUGA" ) != 0 ){ ex(); }
+if( indexOf3( "fug", "FUGA" ) != -1 ){ ex(); }
+if( indexOf3( "fugaa", "FUGA" ) != 0 ){ ex(); }
+if( indexOf3( "hoge fuga", "FUGA" ) != 5 ){ ex(); }
+if( indexOf3( "hogea fuga", "FUGA" ) != 6 ){ ex(); }
+if( indexOf3( "hogeaa fuga", "FUGA" ) != 7 ){ ex(); }
+
+if( indexOf3( "FUGA FUGA", "fuga" ) != 0 ){ ex(); }
+if( indexOf3( "FUG", "fuga" ) != -1 ){ ex(); }
+if( indexOf3( "FUGAA", "fuga" ) != 0 ){ ex(); }
+if( indexOf3( "HOGE FUGA", "fuga" ) != 5 ){ ex(); }
+if( indexOf3( "HOGEA FUGA", "fuga" ) != 6 ){ ex(); }
+if( indexOf3( "HOGEAA FUGA", "fuga" ) != 7 ){ ex(); }
+if( indexOf3( "HOGEAA FUG", "fuga" ) != -1 ){ ex(); }
+
+if( indexOf3( "FUGA FUGA", "fuGa" ) != 0 ){ ex(); }
+if( indexOf3( "FUG", "fuGa" ) != -1 ){ ex(); }
+if( indexOf3( "FUGAA", "fuGa" ) != 0 ){ ex(); }
+if( indexOf3( "HOGE FUGA", "fuGa" ) != 5 ){ ex(); }
+if( indexOf3( "HOGEA FUGA", "fuGa" ) != 6 ){ ex(); }
+if( indexOf3( "HOGEAA FUGA", "fuGa" ) != 7 ){ ex(); }
+if( indexOf3( "HOGEAA FUG", "fuGa" ) != -1 ){ ex(); }
+
+if( indexOf3( "fuga fuga", "" ) != 0 ){ ex(); }
+if( indexOf3( "", "" ) != 0 ){ ex(); }
+if( indexOf3( "", "a" ) != -1 ){ ex(); }
+if( indexOf3( "", "aaaaa" ) != -1 ){ ex(); }
+if( indexOf3( "ab", "a" ) != 0 ){ ex(); }
+if( indexOf3( "ab", "b" ) != 1 ){ ex(); }
+if( indexOf3( "abc", "c" ) != 2 ){ ex(); }
+
+if( indexOf3( "b", "b" ) != 0 ){ ex(); }
+
+if( indexOf3( "b", "hoge" ) != -1 ){ ex(); }
+if( indexOf3( "b", "ho" ) != -1 ){ ex(); }
+if( indexOf3( "b", "hog" ) != -1 ){ ex(); }
+
+if( indexOf3( "b", "bbb" ) != -1 ){ ex(); }
+if( indexOf3( "b", "bb" ) != -1 ){ ex(); }
+if( indexOf3( "b", "bbbb" ) != -1 ){ ex(); }
+
+if( indexOf3( "ab", "bbb" ) != -1 ){ ex(); }
+if( indexOf3( "ab", "bb" ) != -1 ){ ex(); }
+if( indexOf3( "ab", "bbbb" ) != -1 ){ ex(); }
+}
+//--------------------------------------------------------------------------------
+private static void testIndexOf2()
+throws Exception
+{
+if( indexOf2( "fuga fuga", "fuga" ) != 0 ){ ex(); }
+if( indexOf2( "fug", "fuga" ) != -1 ){ ex(); }
+if( indexOf2( "fugaa", "fuga" ) != 0 ){ ex(); }
+if( indexOf2( "hoge fuga", "fuga" ) != 5 ){ ex(); }
+if( indexOf2( "hogea fuga", "fuga" ) != 6 ){ ex(); }
+if( indexOf2( "hogeaa fuga", "fuga" ) != 7 ){ ex(); }
+
+if( indexOf2( "hogeaa fug fuga", "fuga" ) != 11 ){ ex(); }
+if( indexOf2( "hogeaa fug fuGa", "Fuga" ) != 11 ){ ex(); }
+if( indexOf2( "hogeaa fug fUga", "fugA" ) != 11 ){ ex(); }
+
+if( indexOf2( "fuga fuga", "FUGA" ) != 0 ){ ex(); }
+if( indexOf2( "fug", "FUGA" ) != -1 ){ ex(); }
+if( indexOf2( "fugaa", "FUGA" ) != 0 ){ ex(); }
+if( indexOf2( "hoge fuga", "FUGA" ) != 5 ){ ex(); }
+if( indexOf2( "hogea fuga", "FUGA" ) != 6 ){ ex(); }
+if( indexOf2( "hogeaa fuga", "FUGA" ) != 7 ){ ex(); }
+
+if( indexOf2( "FUGA FUGA", "fuga" ) != 0 ){ ex(); }
+if( indexOf2( "FUG", "fuga" ) != -1 ){ ex(); }
+if( indexOf2( "FUGAA", "fuga" ) != 0 ){ ex(); }
+if( indexOf2( "HOGE FUGA", "fuga" ) != 5 ){ ex(); }
+if( indexOf2( "HOGEA FUGA", "fuga" ) != 6 ){ ex(); }
+if( indexOf2( "HOGEAA FUGA", "fuga" ) != 7 ){ ex(); }
+if( indexOf2( "HOGEAA FUG", "fuga" ) != -1 ){ ex(); }
+
+if( indexOf2( "FUGA FUGA", "fuGa" ) != 0 ){ ex(); }
+if( indexOf2( "FUG", "fuGa" ) != -1 ){ ex(); }
+if( indexOf2( "FUGAA", "fuGa" ) != 0 ){ ex(); }
+if( indexOf2( "HOGE FUGA", "fuGa" ) != 5 ){ ex(); }
+if( indexOf2( "HOGEA FUGA", "fuGa" ) != 6 ){ ex(); }
+if( indexOf2( "HOGEAA FUGA", "fuGa" ) != 7 ){ ex(); }
+if( indexOf2( "HOGEAA FUG", "fuGa" ) != -1 ){ ex(); }
+
+if( indexOf2( "fuga fuga", "" ) != 0 ){ ex(); }
+if( indexOf2( "", "" ) != 0 ){ ex(); }
+if( indexOf2( "", "a" ) != -1 ){ ex(); }
+if( indexOf2( "", "aaaaa" ) != -1 ){ ex(); }
+
+if( indexOf2( "ab", "a" ) != 0 ){ ex(); }
+if( indexOf2( "ab", "b" ) != 1 ){ ex(); }
+
+if( indexOf2( "b", "b" ) != 0 ){ ex(); }
+
+if( indexOf2( "b", "hoge" ) != -1 ){ ex(); }
+if( indexOf2( "b", "ho" ) != -1 ){ ex(); }
+if( indexOf2( "b", "hog" ) != -1 ){ ex(); }
+
+if( indexOf2( "b", "bbb" ) != -1 ){ ex(); }
+if( indexOf2( "b", "bb" ) != -1 ){ ex(); }
+if( indexOf2( "b", "bbbb" ) != -1 ){ ex(); }
+
+if( indexOf2( "ab", "bbb" ) != -1 ){ ex(); }
+if( indexOf2( "ab", "bb" ) != -1 ){ ex(); }
+if( indexOf2( "ab", "bbbb" ) != -1 ){ ex(); }
+
+}
+//--------------------------------------------------------------------------------
+private static void testIndexOf()
+throws Exception
+{
+if( indexOf( "fuga fuga", "fuga" ) != 0 ){ ex(); }
+if( indexOf( "fug", "fuga" ) != -1 ){ ex(); }
+if( indexOf( "fugaa", "fuga" ) != 0 ){ ex(); }
+if( indexOf( "hoge fuga", "fuga" ) != 5 ){ ex(); }
+if( indexOf( "hogea fuga", "fuga" ) != 6 ){ ex(); }
+if( indexOf( "hogeaa fuga", "fuga" ) != 7 ){ ex(); }
+
+if( indexOf( "fuga fuga", "FUGA" ) != 0 ){ ex(); }
+if( indexOf( "fug", "FUGA" ) != -1 ){ ex(); }
+if( indexOf( "fugaa", "FUGA" ) != 0 ){ ex(); }
+if( indexOf( "hoge fuga", "FUGA" ) != 5 ){ ex(); }
+if( indexOf( "hogea fuga", "FUGA" ) != 6 ){ ex(); }
+if( indexOf( "hogeaa fuga", "FUGA" ) != 7 ){ ex(); }
+
+if( indexOf( "FUGA FUGA", "fuga" ) != 0 ){ ex(); }
+if( indexOf( "FUG", "fuga" ) != -1 ){ ex(); }
+if( indexOf( "FUGAA", "fuga" ) != 0 ){ ex(); }
+if( indexOf( "HOGE FUGA", "fuga" ) != 5 ){ ex(); }
+if( indexOf( "HOGEA FUGA", "fuga" ) != 6 ){ ex(); }
+if( indexOf( "HOGEAA FUGA", "fuga" ) != 7 ){ ex(); }
 }
 //--------------------------------------------------------------------------------
 private static void testIndexOfWord()
@@ -674,9 +858,19 @@ if( isValidHostname( "192.168.1.1" ) ){ throw new Exception(); }
 
 }
 //--------------------------------------------------------------------------------
+public static void ex()
+throws Exception
+{
+throw new Exception();
+}
+//--------------------------------------------------------------------------------
 public static void main( String[] args )
 throws Exception
 {
+testIndexOfIgnoreCase();
+testIndexOf();
+testIndexOf2();
+testIndexOf3();
 testValidHost();
 testContainsTwoWordIgnoreCase();
 testHiddenInComment();
@@ -1905,21 +2099,63 @@ public static boolean isValidHostname( String host )
 return host.matches( "^[a-zA-Z0-9]{1}[-a-zA-Z0-9\\.]{1,}\\.[a-zA-Z]{2,}$" );
 }
 //--------------------------------------------------------------------------------
-public static int indexOf( String target, String patternStr, String charset )
+public static int indexOf2( String target, String patternStr )
 {
-try
+int targetCount = target.length();
+int patternCount = patternStr.length();
+
+if( 0 >= targetCount )
 	{
-	return indexOf( target.getBytes( charset ), patternStr );
+	return ( patternCount == 0 ? targetCount : -1 );
 	}
-catch( Exception e )
+
+if( patternCount == 0 )
 	{
-	return -1;
+	return 0;
 	}
+
+char[] patternUpper = patternStr.toUpperCase().toCharArray();
+char[] patternLower = patternStr.toLowerCase().toCharArray();
+
+char patternFirstUpper  = patternUpper[ 0 ];
+char patternFirstLower  = patternLower[ 0 ];
+
+int max = targetCount - patternCount;
+
+for( int i = 0; i <= max; i++ )
+	{
+	/* Look for first character. */
+	if( target.charAt( i ) != patternFirstUpper && target.charAt( i ) != patternFirstLower )
+		{
+		while( ++i <= max && target.charAt( i ) != patternFirstUpper && target.charAt( i ) != patternFirstLower );
+		}
+
+	/* Found first character, now look at the rest of v2 */
+       if( i <= max )
+		{
+		int j = i + 1;
+		int end = j + patternCount - 1;
+		for (int k = 1; j < end && ( target.charAt( j ) == patternLower[k] || target.charAt( j ) == patternUpper[ k ] ) ; j++, k++);
+
+		if (j == end)
+			{
+			/* Found whole string. */
+			return i;
+			}
+		}
+	}
+return -1;
+//return indexOfIgnoreCase( targetArray, 0, targetArray.length, patternArray, 0, patternArray.length, 0 );
+}
+//--------------------------------------------------------------------------------
+public static int indexOfIgnoreCase( String target, String patternStr )
+{
+return indexOf2( target, patternStr );
 }
 //--------------------------------------------------------------------------------
 public static int indexOf( String target, String patternStr )
 {
-return indexOf( target, patternStr, "ISO-8859-1" );
+return indexOf2( target, patternStr );
 }
 //--------------------------------------------------------------------------------
 public static byte[] latin1Bytes( String s )
@@ -1934,13 +2170,60 @@ catch( Exception willneverhappen )
 	}
 }
 // --------------------------------------------------------------------------------
-public static int indexOf( byte[] target, String patternStr )
+public static int indexOf3( String target, String patternStr )
 {
-	//‚Æ‚è‚ ‚¦‚¸ASCII‚É‚Â‚¢‚Ä‚Ì‚Ýl‚¦‚é
-byte[] lowerArray = latin1Bytes( patternStr.toLowerCase() );
-byte[] upperArray = latin1Bytes( patternStr.toUpperCase() );
+if( patternStr.length() == 0 )
+	{
+	return 0;
+	}
 
-int bodyLen = target.length;
+	//‚Æ‚è‚ ‚¦‚¸ASCII‚É‚Â‚¢‚Ä‚Ì‚Ýl‚¦‚é
+char[] patternUpper = patternStr.toLowerCase().toCharArray();
+char[] patternLower = patternStr.toUpperCase().toCharArray();
+
+int targetCount = target.length();
+int patternCount = patternStr.length();
+int max = targetCount - patternCount;
+for( int i = 0; i <= max ; ++i )
+	{
+	if( target.charAt( i ) !=  patternUpper[ 0 ] && target.charAt( i ) !=  patternLower[ 0 ] )
+		{
+		for( ; i <= max && target.charAt( i ) != patternUpper[ 0 ] && target.charAt( i ) != patternLower[ 0 ]; )
+			{
+			++i;
+			}		
+		}
+	/*
+	if( target.charAt( i ) !=  patternUpper[ 0 ] && target.charAt( i ) !=  patternLower[ 0 ] )
+		{
+		while( ++i <= max && target.charAt( i ) !=  patternUpper[ 0 ] && target.charAt( i ) !=  patternLower[ 0 ] );
+		}
+	*/
+	int k = 1;
+	if( i <= max )
+		{
+		for( ; k < patternUpper.length &&  ( target.charAt( i + k ) == patternUpper[ k ] || target.charAt( i + k ) == patternLower[ k ] ) ; ++k );
+		}
+	if( k == patternUpper.length )
+		{
+		return i;
+		}
+	}
+return -1;
+}
+// --------------------------------------------------------------------------------
+public static int indexOf31( String target, String patternStr )
+{
+if( patternStr.length() == 0 )
+	{
+	return 0;
+	}
+
+	//‚Æ‚è‚ ‚¦‚¸ASCII‚É‚Â‚¢‚Ä‚Ì‚Ýl‚¦‚é
+char[] lowerArray = patternStr.toLowerCase().toCharArray();
+char[] upperArray = patternStr.toUpperCase().toCharArray();
+
+int bodyLen = target.length();
 int patternLen = patternStr.length();
 for( int i = 0; i < bodyLen; ++i )
 	{
@@ -1953,7 +2236,7 @@ for( int i = 0; i < bodyLen; ++i )
 		{
 		for( int k = 0; k < patternLen; ++k )
 			{
-			if( target[ i + k ] != lowerArray[ k ] && target[ i + k ] != upperArray[ k ] )
+			if( target.charAt( i + k ) != lowerArray[ k ] && target.charAt( i + k ) != upperArray[ k ] )
 				{
 				break;
 				}
