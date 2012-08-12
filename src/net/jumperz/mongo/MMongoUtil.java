@@ -145,7 +145,7 @@ String collName = getCollNameFromAction( findQueryStr, "find" );
 findQueryStr = findQueryStr.replaceFirst( "db." + collName, "a" );
 
 String jsStr = MStreamUtil.streamToString( MStreamUtil.getResourceStream( "net/jumperz/mongo/parseFindQuery.txt" ) );
-jsStr = jsStr.replaceFirst( "//_QUERY_", findQueryStr );
+jsStr = MStringUtil.replaceFirst( jsStr, "//_QUERY_", findQueryStr );
 //System.out.println( jsStr );
 
 BasicDBObject result = ( BasicDBObject )db.eval( jsStr, null );

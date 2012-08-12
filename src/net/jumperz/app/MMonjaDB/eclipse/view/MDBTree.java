@@ -121,6 +121,7 @@ updateGui();
 //--------------------------------------------------------------------------------
 private void updateGui()
 {
+shell.getDisplay().asyncExec( new Runnable(){ public void run()	{//----	
 boolean hasItem = false;
 if( tree.getItemCount() > 0 )
 	{
@@ -128,6 +129,7 @@ if( tree.getItemCount() > 0 )
 	}
 
 reloadAction.setEnabled( hasItem );
+}});//----
 }
 //--------------------------------------------------------------------------------
 private void drawRootItem( final MConnectAction ca )
@@ -386,7 +388,7 @@ if( eventName.indexOf( event_connect + "_end" ) == 0 )
 	{
 		//draw tree item
 	MConnectAction ca = ( MConnectAction )source;
-	onConnect( ca );	
+	onConnect( ca );
 	}
 else if( eventName.indexOf( event_showdbs + "_end" ) == 0 )
 	{
