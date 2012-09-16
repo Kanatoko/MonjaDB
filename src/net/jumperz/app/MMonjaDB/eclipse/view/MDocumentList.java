@@ -724,7 +724,16 @@ String fieldName = table.getColumn( columnIndex ).getText();
 
 Object newValue = MMongoUtil.getValueByCurrentType( value, clazz );
 
-dataManager.updateDocument( new ObjectId( objectIdStr ), fieldName, newValue );
+Object id = null;
+try
+	{
+	id = new ObjectId( objectIdStr );
+	}
+catch( Exception ignored )
+	{
+	id = objectIdStr;
+	}
+dataManager.updateDocument( id, fieldName, newValue );
 /*
 BasicDBObject query = new BasicDBObject( "_id", new ObjectId( objectIdStr ) );
 BasicDBObject update = new BasicDBObject( "$set", new BasicDBObject( fieldName, newValue ) );
@@ -750,10 +759,26 @@ actionManager.executeAction( "db." + collName + ".update(" +
 private Class getCurrentClass( TableItem item, int columnIndex )
 {
 String objectIdStr = item.getText( 0 );
-ObjectId oid = new ObjectId( objectIdStr );
+
+ObjectId oid = null;
+Object idKey = objectIdStr;
+try
+	{
+	oid = new ObjectId( objectIdStr );
+	idKey = oid;
+	}
+catch( Exception ignored )
+	{
+	}
 
 	//check data type
-final DBObject currentData = ( DBObject)dataManager.getDocumentDataMap().get( oid );
+Map documentDataMap = dataManager.getDocumentDataMap();
+DBObject currentData = ( DBObject)documentDataMap.get( idKey );
+if( currentData == null )
+	{
+	currentData = ( DBObject)documentDataMap.get( objectIdStr );
+	}
+
 String fieldName = table.getColumn( columnIndex ).getText();
 Class clazz = null;
 if( currentData.containsField( fieldName ) )

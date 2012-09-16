@@ -40,7 +40,7 @@ return _idStr;
 public boolean parse( String action )
 {
 this.action = action;
-_idStr = MRegEx.getMatch( "mj edit ([0-9a-zA-Z]+)$", action );
+_idStr = MRegEx.getMatch( "mj edit ([-_\\./0-9a-zA-Z]+)$", action );
 if( _idStr.length() > 0 )
 	{
 	try
