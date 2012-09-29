@@ -347,7 +347,7 @@ updateButton.setEnabled( false );
 private void onEdit( MEditAction action )
 {
 _id = action.getIdAsObject();
-final DBObject data = ( DBObject) dataManager.getDocumentDataMap().get( _id );
+final DBObject data = dataManager.getDocumentDataByAction( action );
 
 fieldNameTreeItemMap = new HashMap();
 

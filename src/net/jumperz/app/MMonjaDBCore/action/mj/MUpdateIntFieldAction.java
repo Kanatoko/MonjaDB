@@ -50,7 +50,7 @@ String oidStr = array[ 5 ];
 String fieldName = array[ 6 ];
 int value = MStringUtil.parseInt( array[ 7 ] );
 
-ObjectId oid = new ObjectId( oidStr );
+Object oid = MCoreUtil.getObjectIdFromString( oidStr );
 DBObject query = new BasicDBObject( "_id", oid );
 DBObject update = new BasicDBObject( "$set", new BasicDBObject( fieldName, new Integer( value ) ) );
 

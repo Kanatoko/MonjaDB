@@ -708,7 +708,6 @@ pasteAction.setEnabled( dataManager.getCopiedDocumentList().size() > 0 );
 removeAction.setEnabled( multiItem || oneItem );
 
 boolean collSelected = false;
-debug( dataManager.getCollName() );
 if( dataManager.isConnected() && dataManager.getCollName() != null && dataManager.getCollName().length() > 0 )
 	{
 	collSelected = true;
@@ -719,20 +718,13 @@ insertJsonAction.setEnabled( collSelected );
 //--------------------------------------------------------------------------------
 private void updateDocument( TableItem item, int columnIndex, Class clazz, String value )
 {
-String objectIdStr = item.getText( 0 );
+//String objectIdStr = item.getText( 0 );
+DBObject currentData = ( DBObject )item.getData();
 String fieldName = table.getColumn( columnIndex ).getText();
 
 Object newValue = MMongoUtil.getValueByCurrentType( value, clazz );
 
-Object id = null;
-try
-	{
-	id = new ObjectId( objectIdStr );
-	}
-catch( Exception ignored )
-	{
-	id = objectIdStr;
-	}
+Object id = currentData.get( "_id" );
 dataManager.updateDocument( id, fieldName, newValue );
 /*
 BasicDBObject query = new BasicDBObject( "_id", new ObjectId( objectIdStr ) );
@@ -758,26 +750,7 @@ actionManager.executeAction( "db." + collName + ".update(" +
 //--------------------------------------------------------------------------------
 private Class getCurrentClass( TableItem item, int columnIndex )
 {
-String objectIdStr = item.getText( 0 );
-
-ObjectId oid = null;
-Object idKey = objectIdStr;
-try
-	{
-	oid = new ObjectId( objectIdStr );
-	idKey = oid;
-	}
-catch( Exception ignored )
-	{
-	}
-
-	//check data type
-Map documentDataMap = dataManager.getDocumentDataMap();
-DBObject currentData = ( DBObject)documentDataMap.get( idKey );
-if( currentData == null )
-	{
-	currentData = ( DBObject)documentDataMap.get( objectIdStr );
-	}
+DBObject currentData = ( DBObject )item.getData();
 
 String fieldName = table.getColumn( columnIndex ).getText();
 Class clazz = null;

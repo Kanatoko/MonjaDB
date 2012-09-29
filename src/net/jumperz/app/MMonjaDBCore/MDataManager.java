@@ -145,6 +145,23 @@ public List getDocumentDataList()
 return documentDataList;
 }
 //--------------------------------------------------------------------------------
+public DBObject getDocumentDataByAction( MEditAction action )
+{
+Object _id = action.getIdAsObject();
+DBObject _data = ( DBObject)getDocumentDataMap().get( _id );
+
+if( _data == null )
+	{
+	String _idStr = action.getIdAsString();
+	if( _idStr.matches( "^[\\.0-9]+$" ) )
+		{
+			//is objectid type double?
+		_data = ( DBObject)getDocumentDataMap().get( new Double( _idStr ) );
+		}
+	}
+return _data;
+}
+//--------------------------------------------------------------------------------
 public Map getDocumentDataMap()
 {
 return documentDataMap;

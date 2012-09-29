@@ -41,21 +41,14 @@ public boolean parse( String action )
 {
 this.action = action;
 _idStr = MRegEx.getMatch( "mj edit ([-_\\./0-9a-zA-Z]+)$", action );
-if( _idStr.length() > 0 )
+_idObj = MCoreUtil.getObjectIdFromString( _idStr );
+if( _idObj == null )
 	{
-	try
-		{
-		_idObj = new ObjectId( _idStr );
-		}
-	catch( Exception e )
-		{
-		_idObj = _idStr;
-		}
-	return true;
+	return false;
 	}
 else
 	{
-	return false;
+	return true;
 	}
 }
 //--------------------------------------------------------------------------------
