@@ -18,8 +18,13 @@ if( _idStr.length() > 0 )
 		{
 		if( _idStr.matches( "^[0-9]+\\.[0-9]+$" ) )
 			{
-				//assume the OID type is double
+				//assume the type of OID is double
 			_idObj = new Double( _idStr );
+			}
+		else if( _idStr.matches( "^[0-9]+$" ) )
+			{
+				//assume the type of OID is integer
+			_idObj = new Integer( _idStr );
 			}
 		else
 			{
