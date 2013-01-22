@@ -9,6 +9,7 @@ private int state;
 private InputStream inputStream;
 private OutputStream outputStream;
 private MSubject1 subject = new MSubject1Impl();
+private boolean flush;
 
 private static final int DEFAULT_BUFSIZE = 4096;
 
@@ -25,6 +26,11 @@ public MStreamConnector( InputStream in_inputStream, OutputStream in_outputStrea
 {
 inputStream	= in_inputStream;
 outputStream	= in_outputStream;
+}
+//--------------------------------------------------------------------------------
+public void setFlush()
+{
+flush = true;
 }
 // --------------------------------------------------------------------------------
 public int getReceived()
@@ -67,6 +73,10 @@ try
 		notify1();
 		
 		outputStream.write( buffer, 0, received );
+		if( flush )
+			{
+			outputStream.flush();
+			}
 		totalSize += received;
 		state = SENT;
 		notify1();

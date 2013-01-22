@@ -6,8 +6,8 @@ import java.util.*;
 public class MRegEx
 {
 private static Map patternMap = new HashMap();
-public static final String WORD_HEAD = "(?:\\A|\\W+?)";
-public static final String WORD_TAIL = "(?:$|\\W+?)";
+public static final String WORD_HEAD = "(?:\\A|[^a-zA-Z]{1})";
+public static final String WORD_TAIL = "(?:$|[^a-zA-Z]{1})";
 public static final String WORD_BETWEEN = "(?:\\W+?.*\\W+?|\\W+?)";
 //--------------------------------------------------------------------------------
 public static void main( String[] args )

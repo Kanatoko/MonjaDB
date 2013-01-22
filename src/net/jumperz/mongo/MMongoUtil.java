@@ -23,8 +23,9 @@ public class MMongoUtil
 public static final String INC = "$inc";
 public static final String SET = "$set";
 public static final String OR  = "$or";
+
 public static final String ADDTOSET = "$addToSet";
-private static final int MAX_COUNT = 100000;
+private static final int MAX_COUNT = 320000;
 //private static final String skipMatch  = "\\.\\s*(skip\\s*\\(\\s*[0-9]+\\s*\\))(:?\\W+limit[^a-zA-Z]*)*$";
 //private static final String limitMatch = "\\.\\s*(limit\\s*\\(\\s*[0-9]+\\s*\\))(:?\\W+skip[^a-zA-Z]*)*$";
 

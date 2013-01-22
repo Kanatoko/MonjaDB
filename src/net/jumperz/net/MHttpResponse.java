@@ -181,7 +181,7 @@ public final int getStatusCode()
 return statusCode;
 }
 //-------------------------------------------------------------------------------
-public final byte[] getHeader()
+public synchronized final byte[] getHeader()
 {
 ByteArrayOutputStream bufferStream = null;
 byte[] buf = null;

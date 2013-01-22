@@ -30,7 +30,17 @@ protected int bodyBufSize = DEFAULT_BODY_BUFSIZE;
 public abstract byte[] getHeader();
 protected abstract void recvBodyUntilDisconnected() throws IOException;
 
-private volatile int ownerThreadCount = 1;
+protected Map metaData;
+
+//--------------------------------------------------------------------------------
+public synchronized Map getMetaData()
+{
+if( metaData == null )
+	{
+	metaData = new HashMap();
+	}
+return metaData;
+}
 //-------------------------------------------------------------------------------------------
 public MHttpData()
 {
@@ -83,7 +93,7 @@ catch( UnsupportedEncodingException ignored )
 return s;
 }
 //-------------------------------------------------------------------------------------------
-public final void addHeaderValue( String name, String value )
+public synchronized final void addHeaderValue( String name, String value )
 {
 if( name != null && value != null )
 	{
@@ -91,7 +101,7 @@ if( name != null && value != null )
 	}
 }
 // --------------------------------------------------------------------------------
-public final void addHeader( String header )
+public synchronized final void addHeader( String header )
 {
 if( header != null )
 	{
@@ -170,7 +180,7 @@ return null;
 //		String value = MRegEx.getMatch( "[ ]*(.*)$", header.substring( name.length() + 1 ) );
 }
 // --------------------------------------------------------------------------------
-public final List getHeaderValueList( String name )
+public final synchronized List getHeaderValueList( String name )
 {
 List l = new ArrayList();
 int count = headerList.size();
@@ -249,7 +259,7 @@ else if( connType == CONN_UNKNOWN )
 	}
 }
 //-------------------------------------------------------------------------------------------
-public final boolean headerExists( String name )
+public final synchronized boolean headerExists( String name )
 {
 int count = headerList.size();
 for( int i = 0; i < count; ++i )
@@ -712,7 +722,7 @@ for( int i = 0; i < count; ++i )
 return headerFieldList;
 }
 //-------------------------------------------------------------------------------------------
-public final List getHeaderList()
+public synchronized  final List getHeaderList()
 {
 return new ArrayList( headerList );
 }
@@ -726,31 +736,12 @@ public final boolean hasBody()
 {
 return hasBodyFlag;
 }
-//--------------------------------------------------------------------------------
-public final synchronized void addOwner()
-{
-ownerThreadCount++;
-}
 //-------------------------------------------------------------------------------------------
 public final void clear()
 {
-boolean doClear = false;
-synchronized( this )
+if( bodyBuffer != null )
 	{
-	-- ownerThreadCount;
-	if( ownerThreadCount == 0 )
-		{
-		ownerThreadCount = 1; //reset
-		doClear = true;
-		}
-	}
-
-if( doClear )
-	{
-	if( bodyBuffer != null )
-		{
-		bodyBuffer.clear();	
-		}
+	bodyBuffer.clear();	
 	}
 }
 //--------------------------------------------------------------------------------

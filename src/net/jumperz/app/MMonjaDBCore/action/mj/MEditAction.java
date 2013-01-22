@@ -40,7 +40,7 @@ return _idStr;
 public boolean parse( String action )
 {
 this.action = action;
-_idStr = MRegEx.getMatch( "mj edit ([-_\\./0-9a-zA-Z]+)$", action );
+_idStr = MRegEx.getMatch( "mj edit (.*)$", action );
 _idObj = MCoreUtil.getObjectIdFromString( _idStr );
 if( _idObj == null )
 	{

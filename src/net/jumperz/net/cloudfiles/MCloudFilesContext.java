@@ -36,6 +36,17 @@ if( errorStatus == CFILES_ERROR_STATUS_TOO_MANY_ERRORS )
 return true;
 }
 //--------------------------------------------------------------------------------
+public MHttpResponse headObject( String containerName, String objectPath )
+throws IOException
+{
+checkStatus();
+
+MHttpRequest request = MCloudFilesUtil.getObjectRequest( containerName, objectPath, storageUrl, authToken );
+request.setMethod( "HEAD" );
+MHttpResponse response = MCloudFilesUtil.sendRequest( request );
+return response;
+}
+//--------------------------------------------------------------------------------
 private void checkStatus()
 throws IOException
 {
@@ -56,6 +67,36 @@ if( ( now - lastAuth ) > 1000 * 60 * 60 * 23 )
 	}
 }
 //--------------------------------------------------------------------------------
+public MHttpResponse getObject( String containerName, String objectPath )
+throws IOException
+{
+checkStatus();
+
+MHttpRequest request = MCloudFilesUtil.getObjectRequest( containerName, objectPath, storageUrl, authToken );
+//debug( request );
+MHttpResponse response = MCloudFilesUtil.sendRequest( request );
+//debug( response.getHeaderAsString() );
+return response;
+}
+//--------------------------------------------------------------------------------
+public List getContainerList()
+throws IOException
+{
+checkStatus();
+
+MHttpRequest request = MCloudFilesUtil.getContainerListRequest( storageUrl, authToken );
+MHttpResponse response = MCloudFilesUtil.sendRequest( request );
+
+if( response.getStatusCode() == 200 )
+	{
+	return Arrays.asList( response.getBodyAsString().split( "(\\r|\\n)+" ) );
+	}
+else
+	{
+	return new ArrayList();
+	}
+}
+//--------------------------------------------------------------------------------
 public List getList( String containerName )
 throws IOException
 {
@@ -64,7 +105,14 @@ checkStatus();
 MHttpRequest request = MCloudFilesUtil.getListRequest( containerName, storageUrl, authToken );
 MHttpResponse response = MCloudFilesUtil.sendRequest( request );
 
-return Arrays.asList( response.getBodyAsString().split( "(\\r|\\n)+" ) );
+if( response.getStatusCode() == 200 )
+	{
+	return Arrays.asList( response.getBodyAsString().split( "(\\r|\\n)+" ) );
+	}
+else
+	{
+	return new ArrayList();
+	}
 }
 //--------------------------------------------------------------------------------
 public void deleteObject( String containerName, String objectPath )
@@ -73,9 +121,9 @@ throws IOException
 checkStatus();
 
 MHttpRequest request = MCloudFilesUtil.getDeleteRequest( containerName, objectPath, storageUrl, authToken );
-debug( request );
+//debug( request );
 MHttpResponse response = MCloudFilesUtil.sendRequest( request );
-debug( response );
+//debug( response );
 
 int statusCode = response.getStatusCode();
 if( statusCode == 204
@@ -114,11 +162,12 @@ if( objectResponse.headerExists( "Content-Type" ) )
 
 MHttpRequest request = MCloudFilesUtil.getUploadRequest( containerName, objectPath, contentLength, metaData, storageUrl, authToken, contentType ); 
 MHttpResponse response = MCloudFilesUtil.sendRequestWithBodyStream( request, objectResponse.getBodyInputStream() );
-debug( response );
+//debug( response );
 
 if( response.getStatusCode() == 201 || response.getStatusCode() == 202 )
 	{
 	onSuccess();
+	debug( "object uploaded. " + containerName + ":" + objectPath );
 	}
 else
 	{
@@ -135,7 +184,7 @@ checkStatus();
 
 MHttpRequest request = MCloudFilesUtil.getContainerCdnEnabledRequest( containerName, cdnManagementUrl, authToken, ttl );
 MHttpResponse response = MCloudFilesUtil.sendRequest( request );
-debug( response );
+//debug( response );
 if( response.getStatusCode() == 201 || response.getStatusCode() == 202 )
 	{
 	onSuccess();
@@ -166,7 +215,7 @@ checkStatus();
 
 MHttpRequest request = MCloudFilesUtil.getCreateContainerRequest( containerName, metaData, storageUrl, authToken );
 MHttpResponse response = MCloudFilesUtil.sendRequest( request );
-debug( response );
+//debug( response );
 if( response.getStatusCode() == 201 || response.getStatusCode() == 202 )
 	{
 	onSuccess();
@@ -213,18 +262,18 @@ errorStatus = CFILES_ERROR_STATUS_OK;
 private synchronized void auth( boolean force )
 throws IOException
 {
-debug( "auth:" + authState );
+//debug( "auth:" + authState );
 if( authState == CFILES_STATE_AUTH_OK
  && force == false
   )
 	{
-	debug( "auth passed" );
+	//debug( "auth passed" );
 	return;
 	}
 
 MHttpRequest request = MCloudFilesUtil.getAuthRequest( authUser, authKey );
 MHttpResponse authResponse = MCloudFilesUtil.sendRequest( request );
-debug( authResponse );
+//debug( authResponse );
 
 if( authResponse.getStatusCode() == 204 )
 	{
@@ -313,6 +362,7 @@ return instance;
 private MCloudFilesContext()
 {
 //singleton
+//MLogServer.getInstance().addIgnoredClassName( "MCloudFilesContext" );
 }
 //--------------------------------------------------------------------------------
 public void setAuthUser( String s )

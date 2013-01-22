@@ -94,6 +94,131 @@ buf.append( "$" );
 Pattern pattern = Pattern.compile( buf.toString(), Pattern.CASE_INSENSITIVE );
 return pattern.matcher( target ).find();
 }
+//--------------------------------------------------------------------------------
+public static void testParseParentheses()
+throws Exception
+{
+if( !parseParentheses( "hogehoge" ).equals( "hogehoge" ) ){ ex(); }
+if( !parseParentheses( ")" ).equals( " " ) ){ ex(); }
+if( !parseParentheses( "))" ).equals( "  " ) ){ ex(); }
+if( !parseParentheses( "hoge)" ).equals( "hoge " ) ){ ex(); }
+if( !parseParentheses( "hoge()" ).equals( "hoge()" ) ){ ex(); }
+if( !parseParentheses( "hoge( fuga() )" ).equals( "hoge( fuga() )" ) ){ ex(); }
+if( !parseParentheses( "hoge( fuga() ) )" ).equals( "hoge( fuga() )  " ) ){ ex(); }
+if( !parseParentheses( "hoge(fuga()))" ).equals( "hoge(fuga()) " ) ){ ex(); }
+if( !parseParentheses( "hoge() fuga()" ).equals( "hoge() fuga()" ) ){ ex(); }
+if( !parseParentheses( "hoge() ( fuga() )" ).equals( "hoge() ( fuga() )" ) ){ ex(); }
+
+if( !parseParentheses( "(" ).equals( " " ) ){ ex(); }
+if( !parseParentheses( "((" ).equals( "  " ) ){ ex(); }
+if( !parseParentheses( "hogehoge((" ).equals( "hogehoge  " ) ){ ex(); }
+if( !parseParentheses( "hogehoge(()" ).equals( "hogehoge ()" ) ){ ex(); }
+if( !parseParentheses( "hogehoge((()" ).equals( "hogehoge  ()" ) ){ ex(); }
+
+}
+//--------------------------------------------------------------------------------
+public static String parseParentheses( String value )
+{
+if( value.indexOf( ')' ) == -1
+ && value.indexOf( '(' ) == -1
+  )
+	{
+	return value;
+	}
+else
+	{
+	
+	{
+	int count = 0;
+	char[] buf = new char[ value.length() ];
+	for( int i = 0; i < value.length(); ++i )
+		{
+		final char c = value.charAt( i );
+		if( c == ')' )
+			{
+			if( count > 0 )
+				{
+				-- count;
+				buf[ i ] = c;
+				}
+			else
+				{
+				buf[ i ] = ' ';
+				}
+			}
+		else if( c == '(' )
+			{
+			++count;
+			buf[ i ] = c;
+			}
+		else
+			{
+			buf[ i ] = c;
+			}
+		}
+	value = new String( buf );
+	}
+	
+	{
+	int count = 0;
+	char[] buf = new char[ value.length() ];
+	for( int i = value.length() - 1; i >= 0; --i )
+		{
+		final char c = value.charAt( i );
+		if( c == '(' )
+			{
+			if( count > 0 )
+				{
+				-- count;
+				buf[ i ] = c;
+				}
+			else
+				{
+				buf[ i ] = ' ';
+				}
+			}
+		else if( c == ')' )
+			{
+			++count;
+			buf[ i ] = c;
+			}
+		else
+			{
+			buf[ i ] = c;
+			}
+		}
+	
+	
+	String result = new String( buf );
+	//debug( result );
+	return result;
+	}
+	
+	}
+}
+//--------------------------------------------------------------------------------
+public static boolean containsExt( String target, String ext ) 
+{
+Pattern pattern = Pattern.compile( "\\Q" + ext + "\\E" + "([^a-zA-Z0-9]{1}|$)", Pattern.CASE_INSENSITIVE );
+Matcher matcher = pattern.matcher( target );
+return matcher.find();
+}
+//--------------------------------------------------------------------------------
+public static List loadListFromString( String s )
+{
+String[] array = s.split( "[\\r|\\n]+" );
+List l = new ArrayList( array.length );
+for( int i = 0; i < array.length; ++i )
+	{
+	if( !isComment( array[ i ] ) )
+		{
+		l.add( array[ i ] );
+		}
+	}
+return l;
+}
+//--------------------------------------------------------------------------------
+
 
 /*
  *  * only
@@ -301,8 +426,39 @@ public static void debug( Object o )
 System.err.println( o );
 }
 //--------------------------------------------------------------------------------
+public static String getMiddleString( String target, String word1, String word2 )
+{
+if( !containsWordsIgnoreCase( target, new String[]{ word1, word2 } ) )
+	{
+	return null;
+	}
+int index1 = indexOfIgnoreCase( target, word1 );
+String substr = target.substring( index1 + word1.length() );
+int index2 = indexOfIgnoreCase( substr, word2 );
+return substr.substring( 0, index2 );
+}
+//--------------------------------------------------------------------------------
+public static boolean containsWordsIgnoreCase( String target, String[] words )
+{
+for( int i = 0; i < words.length; ++i )
+	{
+	int index = indexOfWord( target, words[ i ] );
+	if( index == -1 )
+		{
+		return false;
+		}
+	else
+		{
+		target = target.substring( index + words[ i ].length() );		
+		}
+	}
+return true;
+}
+//--------------------------------------------------------------------------------
 public static boolean containsTwoWordIgnoreCase( String target, String word1, String word2 )
 {
+return containsWordsIgnoreCase( target, new String[]{ word1, word2 } );
+/*
 while( true )
 	{
 	int index1 = indexOfWord( target, word1 );
@@ -321,9 +477,11 @@ while( true )
 			}
 		}
 	}
+*/
+
 }
 //--------------------------------------------------------------------------------
-public static int indexOfWord( String value, String word )
+public static int indexOfWord( String value, String word ) //ignore case!!!
 {
 int targetHead = 0;
 int wordLen = word.length();
@@ -578,7 +736,11 @@ if( indexOf( "HOGEAA FUGA", "fuga" ) != 7 ){ ex(); }
 private static void testIndexOfWord()
 throws Exception
 {
+if( indexOfWord( "foo", "foo" ) != 0 ){ throw new Exception(); }
 if( indexOfWord( "aa fooo", "foo" ) != -1 ){ throw new Exception(); }
+if( indexOfWord( "1foo", "foo" ) != 1 ){ throw new Exception(); }
+if( indexOfWord( "foo1", "foo" ) != 0 ){ throw new Exception(); }
+if( indexOfWord( "1foo1", "foo" ) != 1 ){ throw new Exception(); }
 if( indexOfWord( "hoge", "hoge" ) != 0 ){ throw new Exception(); }
 if( indexOfWord( "aa/hogeauu/hoge", "hoge" ) != 11 ){ throw new Exception(); }
 
@@ -603,6 +765,19 @@ if( indexOfWord( "aa fooo", "foo" ) != -1 ){ throw new Exception(); }
 if( indexOfWord( "foofoo", "foo" ) != -1 ){ throw new Exception(); }
 if( indexOfWord( "foofoofooo", "foo" ) != -1 ){ throw new Exception(); }
 
+}
+//--------------------------------------------------------------------------------
+private static void testContainsWordsIgnoreCase()
+throws Exception
+{
+
+if( containsWordsIgnoreCase( "hoge fuga", new String[]{ "hoge", "FUGA" } ) == false ){ ex(); }
+if( containsWordsIgnoreCase( "hoge fuga", new String[]{ "hoge", "gyoe" } ) == true ){ ex(); }
+if( containsWordsIgnoreCase( "hoge", new String[]{ "HOGE" } ) != true ){ ex(); }
+if( containsWordsIgnoreCase( "HOGE", new String[]{ "HOG" } ) == true ){ ex(); }
+if( containsWordsIgnoreCase( "hoge fuga gyoe", new String[]{ "hoge", "fuga", "gyoe" } ) != true ){ ex(); }
+if( containsWordsIgnoreCase( "gyoe fuga hoge", new String[]{ "hoge", "fuga", "gyoe" } ) == true ){ ex(); }
+if( containsWordsIgnoreCase( "'; select * from user", new String[]{ "select", "frOm" } ) == false ){ ex(); }
 }
 //--------------------------------------------------------------------------------
 private static void testContainsWordIgnoreCase()
@@ -864,9 +1039,69 @@ throws Exception
 throw new Exception();
 }
 //--------------------------------------------------------------------------------
+public static void testRemoveSQLDoubleHyphenComments()
+throws Exception
+{
+if( ! removeSQLDoubleHyphenComments( "hoge" ).equals( "hoge" ) ){ ex(); }
+if( ! removeSQLDoubleHyphenComments( "hoge--" ).equals( "hoge" ) ){ ex(); }
+if( ! removeSQLDoubleHyphenComments( "hoge--\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! removeSQLDoubleHyphenComments( "hoge--foobar\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! removeSQLDoubleHyphenComments( "hoge--foo--bar\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! removeSQLDoubleHyphenComments( "hoge--\nhoge--\nhoge" ).equals( "hoge hoge hoge" ) ){ ex(); }
+if( ! removeSQLDoubleHyphenComments( "hoge--\nhoge--fuga\nhoge" ).equals( "hoge hoge hoge" ) ){ ex(); }
+if( ! removeSQLDoubleHyphenComments( "hoge--\nhoge--fuga\nhoge--fuga" ).equals( "hoge hoge hoge" ) ){ ex(); }
+
+}
+//--------------------------------------------------------------------------------
+public static void testIpPrefix()
+throws Exception
+{
+if( !getIpPrefix( "1.2.3.4" ).equals( "1." ) ){ ex(); }
+if( !getIpPrefix( "1.2.3.4*" ).equals( "1." ) ){ ex(); }
+if( !getIpPrefix( "1.2.3.*" ).equals( "1." ) ){ ex(); }
+if( !getIpPrefix( "1.2.3.4/24" ).equals( "1." ) ){ ex(); }
+}
+//--------------------------------------------------------------------------------
+public static void testGetMiddleString()
+throws Exception
+{
+if( !MStringUtil.getMiddleString( "hoge fuga gyoe", "hoge", "gyoe" ).equals( " fuga " ) ){ ex(); }
+if( !MStringUtil.getMiddleString( "a hoge fuga gyoe", "hoge", "gyoe" ).equals( " fuga " ) ){ ex(); }
+if( !MStringUtil.getMiddleString( "a hoge fuga gyoe xx", "hoge", "gyoe" ).equals( " fuga " ) ){ ex(); }
+if( !MStringUtil.getMiddleString( "a hoge fuga gyoe hoge", "hoge", "gyoe" ).equals( " fuga " ) ){ ex(); }
+if( !MStringUtil.getMiddleString( "a gyoe hoge fuga gyoe hoge", "hoge", "gyoe" ).equals( " fuga " ) ){ ex(); }
+if( !MStringUtil.getMiddleString( "gyoe hoge fuga gyoe hoge", "hoge", "gyoe" ).equals( " fuga " ) ){ ex(); }
+}
+//--------------------------------------------------------------------------------
+public static void testContainsExt()
+throws Exception
+{
+if( !containsExt( "hoge.exe", ".exe" ) ){ex();}
+if( !containsExt( "hoge.exe", ".exE" ) ){ex();}
+if( containsExt( "hoge.exe", ".gif" ) ){ex();}
+if( containsExt( "hoge.exe1", ".exe" ) ){ex();}
+if( containsExt( "hoge.exec", ".exe" ) ){ex();}
+if( containsExt( "exe", ".exe" ) ){ex();}
+if( containsExt( "aexe", ".exe" ) ){ex();}
+if( containsExt( "aexe", ".eXe" ) ){ex();}
+if( !containsExt( "hogeexe foo.exe", ".exe" ) ){ex();}
+}
+//--------------------------------------------------------------------------------
 public static void main( String[] args )
 throws Exception
 {
+testParseSQL2();
+testParseParentheses();
+testContainsExt();
+testGetMiddleString();
+testIpPrefix();
+testContainsUneven();
+testIsUneven();
+testRemoveSQLDoubleHyphenComments();
+testContainsWordsIgnoreCase();
+testReplaceWordIgnoreCase();
+testRemoveSQLStrings();
+testParseSQL();
 testIndexOfIgnoreCase();
 testIndexOf();
 testIndexOf2();
@@ -1348,55 +1583,9 @@ try
 	}
 catch( UnsupportedEncodingException ignored )
 	{
+	//ignored.printStackTrace();
 	}
 return str;
-
-/*
-byte[] in = getBytes( inStr, MCharset.CS_ISO_8859_1 );
-int len = in.length;
-byte[] buf = new byte[ len ];
-int buf_p = 0;
-for( int i = 0; i < len; buf_p++ )
-	{
-	byte b = in[ i ];
-	if( b == ( byte )0x25 ) //%
-		{
-		if( len <= ( i + 2 ) )
-			{
-			throw new IllegalArgumentException( "Incomplete trailing escape (%) pattern" ); 
-			}
-		int i1 = asciiByteToInt( in[ i + 1 ] );
-		int i2 = asciiByteToInt( in[ i + 2 ] );
-		if( i1 == -1 || i2 == -1 )
-			{
-			throw new MIllegalEncodingException2( "Illegal characters in escape (%) pattern : " + inStr ); 
-			}
-		byte newByte = ( byte )( i1 * 16 + i2 );
-		buf[ buf_p ] = newByte;
-		i += 3;
-		}
-	else if( b == ( byte )0x2B ) // +
-		{
-		buf[ buf_p ] = 0x20; //space
-		++i;
-		}
-	else
-		{
-		buf[ buf_p ] = b;
-		++i;
-		}
-	}
-
-String str = "";
-try
-	{
-	str = new String( buf, 0, buf_p, charset );
-	}
-catch( UnsupportedEncodingException ignored )
-	{
-	}
-return str;
-*/
 }
 // --------------------------------------------------------------------------------
 public static int asciiByteToInt( byte in_b )
@@ -2094,6 +2283,11 @@ else
 	}
 }
 //--------------------------------------------------------------------------------
+public static String getIpPrefix( String ip )
+{
+return MRegEx.getMatch( "^([0-9]+\\.)", ip );
+}
+//--------------------------------------------------------------------------------
 public static boolean isValidHostname( String host )
 {
 return host.matches( "^[a-zA-Z0-9]{1}[-a-zA-Z0-9\\.]{1,}\\.[a-zA-Z]{2,}$" );
@@ -2251,6 +2445,623 @@ for( int i = 0; i < bodyLen; ++i )
 		}
 	}
 return -1;
+}
+//--------------------------------------------------------------------------------
+public static void testRemoveSQLStrings()
+throws Exception
+{
+/*
+if( ! removeSQLStrings( "aaa' foo", true ).equals( "' foo" ) ){ ex(); }
+if( ! removeSQLStrings( "aaa' foo 'bar'", true ).equals( "' foo ''" ) ){ ex(); }
+if( ! removeSQLStrings( "aaa' foo 'bar' foo", true ).equals( "' foo '' foo" ) ){ ex(); }
+if( ! removeSQLStrings( "aaa' foo 'bar", true ).equals( "' foo '" ) ){ ex(); }
+
+if( ! removeSQLStrings( "'a''b'", false ).equals( "''" ) ){ ex(); }
+if( ! removeSQLStrings( "' '' '", false ).equals( "''" ) ){ ex(); }
+if( ! removeSQLStrings( "''''", false ).equals( "''" ) ){ ex(); }
+if( ! removeSQLStrings( "' '' '' '", false ).equals( "''" ) ){ ex(); }
+
+if( ! removeSQLStrings( "aaa' foo", false ).equals( "aaa'" ) ){ ex(); }
+if( ! removeSQLStrings( "aaa' foo 'bar'", false ).equals( "aaa''bar'" ) ){ ex(); }
+if( ! removeSQLStrings( "aaa' foo 'bar' foo", false ).equals( "aaa''bar'" ) ){ ex(); }
+if( ! removeSQLStrings( "aaa' foo 'bar", false ).equals( "aaa''bar" ) ){ ex(); }
+*/
+}
+//--------------------------------------------------------------------------------
+/*
+public static String removeSQLStrings( String s, boolean inString )
+{
+StringBuffer buf = new StringBuffer( s.length() );
+
+while( s.length() > 0 )
+	{
+	if( inString )
+		{
+		int index = s.indexOf( "'" );
+		if( index == -1 )
+			{
+			if( buf.length() == 0 )
+				{
+				return s;
+				}
+			else
+				{
+				break;			
+				}
+			}
+		else
+			{
+			int index2 = s.indexOf( "''" );
+			if( index2 == index )
+				{
+				s = s.substring( index + 2 );
+				}
+			else
+				{
+				buf.append( "'" );
+				s = s.substring( index + 1 );
+				inString = false;			
+				}
+			}
+		}
+	else
+		{
+		int index = s.indexOf( "'" );
+		if( index == -1 )
+			{
+			buf.append( s );
+			break;
+			}
+		else
+			{
+			buf.append( s.substring( 0, index + 1 ) ); //include '
+			s = s.substring( index + 1 );
+			inString = true;
+			}
+		}
+	}
+
+return buf.toString();
+}*/
+//--------------------------------------------------------------------------------
+public static void testParseSQL()
+throws Exception
+{
+if( ! parseSQL( "aaa/*" ).equals( "aaa" ) ){ ex(); }
+if( ! parseSQL( "aaa/*foo*/" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL( "aaa/* foo */" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL( "aaa/* /*foo */" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL( "aaa/* /*foo * * * / */" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL( "aa/* /*foo * * * / */a" ).equals( "aa a" ) ){ ex(); }
+if( ! parseSQL( "aaa/**/" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL( "aaa/*/" ).equals( "aaa" ) ){ ex(); }
+if( ! parseSQL( "aaa/* */bbb/* */ccc" ).equals( "aaa bbb ccc" ) ){ ex(); }
+if( ! parseSQL( "" ).equals( "" ) ){ ex(); }
+if( ! parseSQL( "/* fffffffffffff" ).equals( "" ) ){ ex(); }
+if( ! parseSQL( "aaa" ).equals( "aaa" ) ){ ex(); }
+if( ! parseSQL( "/*hoge*/" ).equals( " " ) ){ ex(); }
+if( ! parseSQL( "/* hoge */" ).equals( " " ) ){ ex(); }
+if( ! parseSQL( "/*hoge*/'hoge'" ).equals( " ''" ) ){ ex(); }
+if( ! parseSQL( "'hoge'/*hoge*/'hoge'" ).equals( "'' ''" ) ){ ex(); }
+
+if( ! parseSQL( "hoge" ).equals( "hoge" ) ){ ex(); }
+if( ! parseSQL( "hoge--" ).equals( "hoge--" ) ){ ex(); }
+if( ! parseSQL( "hoge--\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! parseSQL( "hoge--foobar\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! parseSQL( "hoge--foo--bar\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! parseSQL( "hoge--\nhoge--\nhoge" ).equals( "hoge hoge hoge" ) ){ ex(); }
+if( ! parseSQL( "hoge--\nhoge--fuga\nhoge" ).equals( "hoge hoge hoge" ) ){ ex(); }
+if( ! parseSQL( "hoge--\nhoge--fuga\nhoge--fuga" ).equals( "hoge hoge hoge--" ) ){ ex(); }
+
+if( ! parseSQL( "hoge 'XXX' fuga" ).equals( "hoge '' fuga" ) ){ ex(); }
+if( ! parseSQL( "''" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL( "'x'" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL( "'xxx'" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL( "'xxx' 1 'yyy'" ).equals( "'' 1 ''" ) ){ ex(); }
+if( ! parseSQL( "''''" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL( "hoge 'fuga" ).equals( "hoge '" ) ){ ex(); }
+if( ! parseSQL( "hoge 'fuga''" ).equals( "hoge '" ) ){ ex(); }
+if( ! parseSQL( "hoge 'fuga' 'gyoe'" ).equals( "hoge '' ''" ) ){ ex(); }
+if( ! parseSQL( "'hoge' 'fuga' 'gyoe'" ).equals( "'' '' ''" ) ){ ex(); }
+
+if( ! parseSQL( "/* remove */" ).equals( " " ) ){ ex(); }
+if( ! parseSQL( "/* remove -- 'foobar' */" ).equals( " " ) ){ ex(); }
+if( ! parseSQL( "/* 'foo' --" ).equals( "" ) ){ ex(); }
+if( ! parseSQL( "-- /* remove */ ''" ).equals( "--" ) ){ ex(); }
+if( ! parseSQL( "--  '' /* " ).equals( "--" ) ){ ex(); }
+if( ! parseSQL( "foo/* */bar 'xxx' baz--" ).equals( "foo bar '' baz--" ) ){ ex(); }
+
+if( ! parseSQL( "foo#bar" ).equals( "foo--" ) ){ ex(); }
+if( ! parseSQL( "foo#bar\nfoo" ).equals( "foo foo" ) ){ ex(); }
+
+}
+//--------------------------------------------------------------------------------
+public static String removeSQLDoubleHyphenComments( String s )
+{
+StringBuffer buf = new StringBuffer( s.length() );
+String[] array = s.split( "[\\r\\n]+" );
+for( int i = 0; i < array.length; ++i )
+	{
+	String append = null;
+	int index = array[ i ].indexOf( "--" );
+	if( index > -1 )
+		{
+		append = array[ i ].substring( 0, index );
+		}
+	else
+		{
+		append = array[ i ];
+		}
+	
+	if( append.length() > 0 )
+		{
+		if( i > 0 )
+			{
+			buf.append( ' ' );
+			}
+		buf.append( append );
+		}
+	}
+return buf.toString();
+}
+//--------------------------------------------------------------------------------
+public static String parseToCommentEnd1( String s )
+{
+	// parse to */
+int index = s.indexOf( "*/" );
+if( index == -1 )
+	{
+	return "";
+	}
+else
+	{
+	s = s.substring( index + 2 );
+	}
+return s;
+}
+//--------------------------------------------------------------------------------
+public static String parseSQLComment2( StringBuffer buf, int index, String s ) // -- comment
+{
+buf.append( s.substring( 0, index ) );
+s = s.substring( index + 2 );
+String eol = MRegEx.getMatch( "[\\r\\n]+", s );
+if( eol.length() > 0 )
+	{
+	buf.append( ' ' );
+	s = s.substring( s.indexOf( eol ) + eol.length() );
+	return s;
+	}
+else
+	{
+	buf.append( "--" ); // do not remove last --
+	return "";
+	}
+}
+//--------------------------------------------------------------------------------
+public static String parseSQLComment1( StringBuffer buf, int index, String s ) // /+ comment
+{
+buf.append( s.substring( 0, index ) );
+s = s.substring( index + 2 );
+
+int index2 = s.indexOf( "*/" );
+if( index2 > -1 )
+	{
+	buf.append( ' ' );
+	s = s.substring( index2 + 2 );
+	return s;
+	}
+else
+	{
+	return "";
+	}
+}
+//--------------------------------------------------------------------------------
+public static String parseSQLString( StringBuffer buf, int index, String s )
+{
+buf.append( s.substring( 0, index ) );
+buf.append( '\'' ); //include '
+s = s.substring( index + 1 );
+
+while( true )
+	{
+	int index2 = s.indexOf( "'" );
+	if( index2 == -1 )
+		{
+			// string not closed
+		return "";
+		}
+	else
+		{
+			// ' found. check for ''
+		if( s.length() == ( index2 + 1 ) )
+			{
+				//end of s
+			buf.append( '\'' );
+			return "";
+			}
+		else if( s.charAt( index2 + 1 ) == '\'' )
+			{
+			s = s.substring( index2 + 2 );			
+			}
+		else
+			{
+			buf.append( '\'' );
+			s = s.substring( index2 + 1 );
+			return s;
+			}
+		}
+	}
+}
+//--------------------------------------------------------------------------------
+public static void testParseSQL2()
+throws Exception
+{
+if( ! parseSQL2( "hoge 'XXX' fuga" ).equals( "hoge '' fuga" ) ){ ex(); }
+if( ! parseSQL2( "''" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL2( "'x'" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL2( "'xxx'" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL2( "'xxx' 1 'yyy'" ).equals( "'' 1 ''" ) ){ ex(); }
+if( ! parseSQL2( "''''" ).equals( "''" ) ){ ex(); }
+if( ! parseSQL2( "hoge 'fuga" ).equals( "hoge '" ) ){ ex(); }
+if( ! parseSQL2( "hoge 'fuga''" ).equals( "hoge '" ) ){ ex(); }
+if( ! parseSQL2( "hoge 'fuga' 'gyoe'" ).equals( "hoge '' ''" ) ){ ex(); }
+if( ! parseSQL2( "'hoge' 'fuga' 'gyoe'" ).equals( "'' '' ''" ) ){ ex(); }
+
+if( ! parseSQL2( "aaa/*" ).equals( "aaa" ) ){ ex(); }
+if( ! parseSQL2( "aaa/*foo*/" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL2( "aaa/* foo */" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL2( "aaa/* /*foo */" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL2( "aaa/* /*foo * * * / */" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL2( "aa/* /*foo * * * / */a" ).equals( "aa a" ) ){ ex(); }
+if( ! parseSQL2( "aaa/**/" ).equals( "aaa " ) ){ ex(); }
+if( ! parseSQL2( "aaa/*/" ).equals( "aaa" ) ){ ex(); }
+if( ! parseSQL2( "aaa/* */bbb/* */ccc" ).equals( "aaa bbb ccc" ) ){ ex(); }
+if( ! parseSQL2( "" ).equals( "" ) ){ ex(); }
+if( ! parseSQL2( "/* fffffffffffff" ).equals( "" ) ){ ex(); }
+if( ! parseSQL2( "aaa" ).equals( "aaa" ) ){ ex(); }
+if( ! parseSQL2( "/*hoge*/" ).equals( " " ) ){ ex(); }
+if( ! parseSQL2( "/* hoge */" ).equals( " " ) ){ ex(); }
+if( ! parseSQL2( "/*hoge*/'hoge'" ).equals( " ''" ) ){ ex(); }
+if( ! parseSQL2( "'hoge'/*hoge*/'hoge'" ).equals( "'' ''" ) ){ ex(); }
+
+if( ! parseSQL2( "hoge" ).equals( "hoge" ) ){ ex(); }
+if( ! parseSQL2( "hoge--" ).equals( "hoge--" ) ){ ex(); }
+if( ! parseSQL2( "hoge--\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! parseSQL2( "hoge--foobar\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! parseSQL2( "hoge--foo--bar\nfuga" ).equals( "hoge fuga" ) ){ ex(); }
+if( ! parseSQL2( "hoge--\nhoge--\nhoge" ).equals( "hoge hoge hoge" ) ){ ex(); }
+if( ! parseSQL2( "hoge--\nhoge--fuga\nhoge" ).equals( "hoge hoge hoge" ) ){ ex(); }
+if( ! parseSQL2( "hoge--\nhoge--fuga\nhoge--fuga" ).equals( "hoge hoge hoge--" ) ){ ex(); }
+
+if( ! parseSQL2( "/* remove */" ).equals( " " ) ){ ex(); }
+if( ! parseSQL2( "/* remove -- 'foobar' */" ).equals( " " ) ){ ex(); }
+if( ! parseSQL2( "/* 'foo' --" ).equals( "" ) ){ ex(); }
+if( ! parseSQL2( "-- /* remove */ ''" ).equals( "--" ) ){ ex(); }
+if( ! parseSQL2( "--  '' /* " ).equals( "--" ) ){ ex(); }
+if( ! parseSQL2( "foo/* */bar 'xxx' baz--" ).equals( "foo bar '' baz--" ) ){ ex(); }
+
+if( ! parseSQL2( "foo#bar" ).equals( "foo--" ) ){ ex(); }
+if( ! parseSQL2( "foo#bar\nfoo" ).equals( "foo foo" ) ){ ex(); }
+if( ! parseSQL2( "foo#bar\nfoo#hoge" ).equals( "foo foo--" ) ){ ex(); }
+
+}
+//--------------------------------------------------------------------------------
+public static String parseSQL2( final String s )
+{
+
+StringBuffer buf = new StringBuffer( s.length() );
+final int MODE_C_STYLE_COMMENT = 0;
+final int MODE_SQL_COMMENT = 1;
+final int MODE_SQL_STRING = 2;
+final int MODE_DEFAULT = 3;
+int mode = MODE_DEFAULT;
+
+final int length = s.length();
+for( int i = 0; i < length; ++i )
+	{
+	boolean isLastChar = ( i == s.length() -1 );
+	char c = s.charAt( i );
+	if( mode == MODE_DEFAULT )
+		{
+		if( c == '\'' )
+			{
+			mode = MODE_SQL_STRING;
+			buf.append( c );
+			}
+		else if( c == '/' )
+			{
+			if( isLastChar )
+				{
+				buf.append( c );
+				}
+			else
+				{
+				if( s.charAt( i + 1 ) == '*' )
+					{
+					mode = MODE_C_STYLE_COMMENT;
+					++i;
+					}
+				else
+					{
+					buf.append( c );
+					}
+				}
+			}
+		else if( c == '-' )
+			{
+			if( isLastChar )
+				{
+				buf.append( c );
+				}
+			else
+				{
+				if( s.charAt( i + 1 ) == '-' )
+					{
+					mode = MODE_SQL_COMMENT;
+					++i;
+					}
+				}
+			}
+		else if( c == '#' )
+			{
+			mode = MODE_SQL_COMMENT;
+			}
+		else
+			{
+			buf.append( c );
+			}
+		}
+	else if( mode == MODE_SQL_STRING )
+		{
+		if( c == '\'' )
+			{
+			if( isLastChar )
+				{
+					//end of parse
+				mode = MODE_DEFAULT;
+				buf.append( c );
+				}
+			else
+				{
+				if( s.charAt( i + 1 ) == '\'' )
+					{
+						// ''
+					++i;	//skip ''
+					}
+				else
+					{
+						//end of string
+					mode = MODE_DEFAULT;
+					buf.append( c );
+					}
+				}
+			}
+		}
+	else if( mode == MODE_C_STYLE_COMMENT )
+		{
+		if( c == '*' )
+			{
+			if( isLastChar )
+				{
+				}
+			else
+				{
+				if( s.charAt( i + 1 ) == '/' )
+					{
+					mode = MODE_DEFAULT;
+					buf.append( ' ' );
+					++i;
+					}
+				else
+					{
+					}
+				}
+			}
+		}
+	else if( mode == MODE_SQL_COMMENT )
+		{
+		if( c == '\n' )
+			{
+			mode = MODE_DEFAULT;
+			buf.append( ' ' );
+			}
+		}
+	}
+
+if( mode == MODE_SQL_COMMENT )
+	{
+	buf.append( "--" );
+	}
+
+return buf.toString();
+}
+//--------------------------------------------------------------------------------
+public static String parseSQL( String s )
+{
+//return parseSQLSlow( s );
+return parseSQL2( s );
+}
+//--------------------------------------------------------------------------------
+public static String parseSQLSlow( String s )
+{
+s = s.replaceAll( "#", "--" );
+
+int index1 = -2;
+int index2 = -2;
+int index3 = -2;
+
+StringBuffer buf = new StringBuffer( s.length() );
+while( s.length() > 0 )
+	{
+	if( index1 != -1 )
+		{
+		index1 = s.indexOf( "/*" );
+		}
+	if( index2 != -1 )
+		{
+		index2 = s.indexOf( "--" );
+		}
+	if( index3 != -1 )
+		{
+		index3 = s.indexOf( "'" );
+		}
+	
+	if( index1 == -1
+	 && index2 == -1
+	 && index3 == -1
+	  )
+		{
+		buf.append( s );
+		break;
+		}
+	
+	if(   index1 != -1
+	 && ( index2 == -1 || index1 < index2 )
+	 && ( index3 == -1 || index1 < index3 )
+	  )
+		{
+		s = parseSQLComment1( buf, index1, s );
+		}
+	else if(   index2 != -1
+	      && ( index1 == -1 || index2 < index1 )
+	      && ( index3 == -1 || index2 < index3 )
+	       )
+	       {
+	       s = parseSQLComment2( buf, index2, s );
+	       }
+	else if(   index3 != -1
+	      && ( index1 == -1 || index3 < index1 )
+	      && ( index2 == -1 || index3 < index2 )
+	       )
+	       {
+	       s = parseSQLString( buf, index3, s );
+	       }
+	}
+
+String result = buf.toString();
+result = result.replaceAll( "\\s", " " );
+return result;
+}
+//--------------------------------------------------------------------------------
+public static boolean containsUneven( String value, String word )
+{
+while( true )
+	{
+	int index = indexOfWord( value, word );
+	if( index == -1 )
+		{
+		return false;
+		}
+	else
+		{
+		String matchStr = value.substring( index, index + word.length() );
+		//System.err.println( matchStr );
+		if( isUneven( matchStr ) )
+			{
+			return true;
+			}
+		else
+			{
+			value = value.substring( index + word.length() );
+			//System.err.println( value );
+			}
+		}
+	}
+}
+//--------------------------------------------------------------------------------
+public static void testContainsUneven()
+throws Exception
+{
+if( containsUneven( "hoge fuga", "foo" ) ){ ex(); }
+if( containsUneven( "hoge fuga", "hoge" ) ){ ex(); }
+if( containsUneven( "Hoge fuga", "hoge" ) ){ ex(); }
+if( containsUneven( "HOGE fuga", "hoge" ) ){ ex(); }
+if( containsUneven( "hoge fuga", "HOGE" ) ){ ex(); }
+if( containsUneven( "Hoge fuga", "HOGE" ) ){ ex(); }
+if( containsUneven( "HOGE fuga", "HOGE" ) ){ ex(); }
+if( containsUneven( "a hoge fuga", "foo" ) ){ ex(); }
+if( containsUneven( "a hoge fuga", "hoge" ) ){ ex(); }
+if( containsUneven( "a Hoge fuga", "hoge" ) ){ ex(); }
+if( containsUneven( "a HOGE fuga", "hoge" ) ){ ex(); }
+if( containsUneven( "a hoge fuga", "HOGE" ) ){ ex(); }
+if( containsUneven( "a Hoge fuga", "HOGE" ) ){ ex(); }
+if( containsUneven( "a HOGE fuga", "HOGE" ) ){ ex(); }
+if( containsUneven( "a HOGE fuga hoge", "HOGE" ) ){ ex(); }
+
+if( containsUneven( "a HOGE fuga", "fuga" ) ){ ex(); }
+
+if( ! containsUneven( "hOGE fuga", "hoge" ) ){ ex(); }
+if( ! containsUneven( "a hOGE fuga", "hoge" ) ){ ex(); }
+if( ! containsUneven( "foo bar hOGE", "hoge" ) ){ ex(); }
+if( ! containsUneven( "foo hoge hOGE", "hoge" ) ){ ex(); }
+
+}
+//--------------------------------------------------------------------------------
+public static boolean isUneven( String s )
+{
+if( s.length() < 3 )
+	{
+	return false;
+	}
+
+if( s.matches( "^[A-Z]+$" )
+ || s.matches( "^[A-Z]{1}[a-z]+$" )
+ || s.matches( "^[a-z]+$" )
+  )
+	{
+	return false;
+	}
+else
+	{
+	return true;
+	}
+}
+//--------------------------------------------------------------------------------
+public static void testIsUneven()
+throws Exception
+{
+if( isUneven( "Hoge" ) ){ ex(); }
+if( isUneven( "hoge" ) ){ ex(); }
+if( isUneven( "HOGE" ) ){ ex(); }
+
+if( ! isUneven( "HoGE" ) ){ ex(); }
+if( ! isUneven( "HogE" ) ){ ex(); }
+if( ! isUneven( "HoGe" ) ){ ex(); }
+if( ! isUneven( "hoGE" ) ){ ex(); }
+if( ! isUneven( "hoGe" ) ){ ex(); }
+if( ! isUneven( "aAaaa" ) ){ ex(); }
+if( ! isUneven( "aAaAa" ) ){ ex(); }
+if( ! isUneven( "aAAAAa" ) ){ ex(); }
+}
+//--------------------------------------------------------------------------------
+public static void testReplaceWordIgnoreCase()
+throws Exception
+{
+if( ! replaceWordIgnoreCase( "foo bar baz", "bar", "xxx" ).equals( "foo xxx baz" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "foo bar baz bar", "bar", "xxx" ).equals( "foo xxx baz xxx" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "foo bar baz barbar", "bar", "xxx" ).equals( "foo xxx baz barbar" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "foo", "bar", "xxx" ).equals( "foo" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "foobar", "bar", "xxx" ).equals( "foobar" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "bar bar", "bar", "xxx" ).equals( "xxx xxx" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "barbarbar", "bar", "xxx" ).equals( "barbarbar" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "x x x", "x", "xxx" ).equals( "xxx xxx xxx" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "xxx", "x", "yyy" ).equals( "xxx" ) ){ ex(); }
+if( ! replaceWordIgnoreCase( "bar", "bAr", "yyy" ).equals( "yyy" ) ){ ex(); }
+}
+//--------------------------------------------------------------------------------
+public static String replaceWordIgnoreCase( String target, String fromWord, String to )
+{
+StringBuffer buf = new StringBuffer( target.length() );
+int index = indexOfWord( target, fromWord );
+while( index >= 0 )
+	{
+	buf.append( target.substring( 0, index ) );
+	buf.append( to );
+	target = target.substring( index + fromWord.length() );
+	index = indexOfWord( target, fromWord );
+	}
+buf.append( target );
+return buf.toString();
 }
 // --------------------------------------------------------------------------------
 public static String cacheEncode( String str )

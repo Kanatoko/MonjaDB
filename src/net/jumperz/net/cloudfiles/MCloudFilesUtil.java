@@ -16,6 +16,41 @@ throws IOException
 return getUploadRequest( containerName, objectPath, contentLength, metaData, storageUrl, authToken, null );
 }
 //--------------------------------------------------------------------------------
+public static MHttpRequest getContainerListRequest( MRequestUri storageUrl, String authToken )
+throws IOException
+{
+MHttpRequest request = new MHttpRequest( "GET " + storageUrl.getPath() +  " HTTP/1.1\r\n\r\n" );
+request.setHeaderValue( "Host", storageUrl.getHost() );
+request.setHeaderValue( "Connection", "close" );
+request.setHeaderValue( "X-Auth-Token", authToken );
+
+return request;
+}
+//--------------------------------------------------------------------------------
+public static MHttpRequest getObjectRequest( String containerName, String objectPath,  MRequestUri storageUrl, String authToken )
+throws IOException
+{
+MHttpRequest request = new MHttpRequest( "GET " + storageUrl.getPath() + "/" + containerName + objectPath + " HTTP/1.1\r\n\r\n" );
+request.setHeaderValue( "Host", storageUrl.getHost() );
+request.setHeaderValue( "Connection", "close" );
+request.setHeaderValue( "X-Auth-Token", authToken );
+
+return request;
+}
+//--------------------------------------------------------------------------------
+public static String getFqdnFromFileName( String fileName, String hostname )
+{
+String fqdn = MRegEx.getMatch( "^http[s]*\\." + hostname + "\\.cdn\\.([^/]+)/", fileName );
+return fqdn;
+}
+//--------------------------------------------------------------------------------
+public static int getSizeFromLog( String log )
+{
+// HTTP/1.1" 200 15233 "
+String match = MRegEx.getMatch( " HTTP/1\\.[01]{1}\" [0-9]{3} ([0-9]+) \"", log );
+return MStringUtil.parseInt( match, 0 );
+}
+//--------------------------------------------------------------------------------
 public static MHttpRequest getListRequest( String containerName, MRequestUri storageUrl, String authToken )
 throws IOException
 {
@@ -36,7 +71,6 @@ request.setHeaderValue( "Connection", "close" );
 request.setHeaderValue( "X-Auth-Token", authToken );
 
 return request;
-
 }
 //--------------------------------------------------------------------------------
 public static MHttpRequest getUploadRequest( String containerName, String objectPath, int contentLength, Map metaData, MRequestUri storageUrl, String authToken, String contentType )
@@ -163,7 +197,7 @@ if( request.hasBody() )
 	}
 
 BufferedInputStream in = new BufferedInputStream( socket.getInputStream() );
-MHttpResponse response = new MHttpResponse( in );
+MHttpResponse response = new MHttpResponse( in, request.getMethodType() == MHttpRequest.HEAD );
 return response;
 }
 //--------------------------------------------------------------------------------

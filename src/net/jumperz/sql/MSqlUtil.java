@@ -540,16 +540,9 @@ else
 return result;
 }
 //--------------------------------------------------------------------------------
-public static int executeUpdate2( Connection connection, String queryString, MObjectArray args )
+public static void setArgs( PreparedStatement ps, MObjectArray args )
 throws SQLException
 {
-long start = System.currentTimeMillis();
-if( queryString.indexOf( "???" ) >= 0 )
-	{
-	queryString = queryString.replaceFirst( "\\?\\?\\?", args.toQues() );
-	}
-
-PreparedStatement ps = connection.prepareStatement( queryString );
 int index = 1;
 List list = args.toList();
 for( int i = 0; i < list.size(); ++i, ++index )
@@ -593,6 +586,19 @@ for( int i = 0; i < list.size(); ++i, ++index )
 		ps.setTimestamp( index, new Timestamp( c.getTimeInMillis() ) );		
 		}
 	}
+}
+//--------------------------------------------------------------------------------
+public static int executeUpdate2( Connection connection, String queryString, MObjectArray args )
+throws SQLException
+{
+long start = System.currentTimeMillis();
+if( queryString.indexOf( "???" ) >= 0 )
+	{
+	queryString = queryString.replaceFirst( "\\?\\?\\?", args.toQues() );
+	}
+
+PreparedStatement ps = connection.prepareStatement( queryString );
+setArgs( ps, args );
 int result = ps.executeUpdate();
 if( debug )
 	{
@@ -619,6 +625,12 @@ public static int executeUpdate2( Connection connection, String queryString, int
 throws SQLException
 {
 return executeUpdate2( connection, queryString, new MObjectArray( i ) );
+}
+// --------------------------------------------------------------------------------
+public static int executeUpdate2( Connection connection, String queryString )
+throws SQLException
+{
+return executeUpdate2( connection, queryString, new MObjectArray() );
 }
 // --------------------------------------------------------------------------------
 public static int executeUpdate2( Connection connection, String queryString, Object o )

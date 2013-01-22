@@ -48,6 +48,11 @@ maxCount = max;
 startCount = start;
 init( start );
 }
+//--------------------------------------------------------------------------------
+public long getCommandCount()
+{
+return commandCount;
+}
 // --------------------------------------------------------------------------------
 public int getCommandListCount()
 {

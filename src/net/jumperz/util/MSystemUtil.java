@@ -241,6 +241,11 @@ return result;
 //--------------------------------------------------------------------------------
 public static String decodeParam( String value )
 {
+return decodeParam( value, MCharset.CS_ISO_8859_1 );
+}
+//--------------------------------------------------------------------------------
+public static String decodeParam( String value, String charset )
+{
 try
 	{
 	if( MUnicodeUrlDecoder.isUrlDecoded( value ) )
@@ -249,7 +254,7 @@ try
 		}
 	else
 		{
-		value = MStringUtil.fastUrlDecode( value, true );
+		value = MStringUtil.fastUrlDecode( value, charset, true );
 		}
 	}
 catch( MIllegalEncodingException2 e )
@@ -262,6 +267,11 @@ return value;
 }
 //--------------------------------------------------------------------------------
 public static List getParametersFromRequest( MHttpRequest request )
+{
+return getParametersFromRequest( request, MCharset.CS_ISO_8859_1 );
+}
+//--------------------------------------------------------------------------------
+public static List getParametersFromRequest( MHttpRequest request, String charset )
 {
 List tmpList = new ArrayList();
 
@@ -289,8 +299,8 @@ for( int i = 0; i < parameterList.size(); ++i )
 	       || parameter.getType() == MAbstractParameter.BODY
 	       )
 		{
-		name = decodeParam( parameter.getName() );
-		value = decodeParam( parameter.getValue() );
+		name = decodeParam( parameter.getName(), charset );
+		value = decodeParam( parameter.getValue(), charset );
 		}
 	
 		//create new param
@@ -600,6 +610,31 @@ try
 finally
 	{
 	MStreamUtil.closeStream( out );
+	}
+}
+//--------------------------------------------------------------------------------
+public static String getHostname()
+{
+try
+	{
+	if( ( new File( "/etc/sysconfig/network" ) ).exists() )
+		{
+		String s = MStringUtil.loadStrFromFile( "/etc/sysconfig/network" );
+		return MRegEx.getMatch( "HOSTNAME=([-a-zA-Z0-9\\.]+)", s );
+		}
+	else if( ( new File( "/etc/hostname" ) ).exists() )
+		{
+		String s = MStringUtil.loadStrFromFile( "/etc/hostname" );
+		return MRegEx.getMatch( "([-a-zA-Z0-9\\.]+)", s );		
+		}
+	else
+		{
+		return "unknown";
+		}
+	}
+catch( IOException e )
+	{
+	return "unknown";
 	}
 }
 // --------------------------------------------------------------------------------
@@ -976,6 +1011,32 @@ buf.append( "." );
 buf.append( Integer.parseInt( s.substring( 0, 2 ), 16 ) );
 
 return buf.toString();
+}
+//--------------------------------------------------------------------------------
+//From Apache Commons
+public static boolean isSymlink( File file )
+throws IOException
+{
+File parent = null;
+
+if( file.getParent() == null )
+	{
+        parent = file;
+        }
+else
+	{
+	File canonicalDir = file.getParentFile().getCanonicalFile();
+	parent = new File( canonicalDir, file.getName() );
+        }
+
+if( parent.getCanonicalFile().equals( parent.getAbsoluteFile() ) )
+	{
+	return false;
+	}
+else
+	{
+	return true;
+	}
 }
 //--------------------------------------------------------------------------------
 }

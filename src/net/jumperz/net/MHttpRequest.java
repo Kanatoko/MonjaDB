@@ -21,6 +21,7 @@ private String version;
 private String addr = "";
 private int port;
 private boolean isMultipart = false;
+private int bodyType;
 
 	//parameters
 private List uriParameterList;
@@ -54,6 +55,14 @@ public static final String DEFAULT_METHOD	= "GET";
 public static final String DEFAULT_URI		= "/";
 public static final String DEFAULT_VERSION	= "HTTP/1.0";
 //public static final String DEFAULT_REQUEST_LINE	= "GET / HTTP/1.0";
+
+public static final int BODY_TYPE_UNKNOWN	= -1;
+public static final int BODY_TYPE_URLENCODED	= 0;
+public static final int BODY_TYPE_MULTIPART	= 1;
+public static final int BODY_TYPE_PLAINTEXT	= 2;
+public static final int BODY_TYPE_JSON		= 3;
+public static final int BODY_TYPE_XML		= 4;
+public static final int BODY_TYPE_DWR		= 5;
 
 public static boolean strictRequestLine = true;
 
@@ -223,29 +232,39 @@ private void parseParametersImpl2( String s, int type )
 String[] pairList = s.split( "&" );
 for( int i = 0; i < pairList.length; ++i )
 	{
+	String name = "";
+	String value = "";
 	int index = pairList[ i ].indexOf( '=' );
-	if( index > 0 )
+	if( index > -1 )
 		{
-		String name  = pairList[ i ].substring( 0, index );
-		String value = "";
+		name  = pairList[ i ].substring( 0, index );
+		value = "";
 		try
 			{
 			//value = MStringUtil.urlDecode( pairList[ i ].substring( index + 1 ) );		
 			//value = MStringUtil.fastUrlDecode( pairList[ i ].substring( index + 1 ) );		
-			value = pairList[ i ].substring( index + 1 );		
+			value = pairList[ i ].substring( index + 1 );
 			}
 		catch( IllegalArgumentException ignored )
 			{
 			}
-		MParameter parameter = new MParameter( name, value, type );
-		if( type == MParameter.URI )
+		}
+	else
+		{
+		name = pairList[ i ];
+		if( name.equals( "" ) )
 			{
-			uriParameterList.add( parameter );		
+			continue;
 			}
-		else if( type == MParameter.BODY )
-			{
-			bodyParameterList.add( parameter );
-			}
+		}
+	MParameter parameter = new MParameter( name, value, type );
+	if( type == MParameter.URI )
+		{
+		uriParameterList.add( parameter );		
+		}
+	else if( type == MParameter.BODY )
+		{
+		bodyParameterList.add( parameter );
 		}
 	}
 }
@@ -294,6 +313,7 @@ if( hasBody() )
 		String contentType = getHeaderValue( "Content-Type" );
 		if( contentType.toLowerCase().indexOf( "application/x-www-form-urlencoded" ) > -1 )
 			{
+			bodyType = BODY_TYPE_URLENCODED;
 			try
 				{
 				String bodyStr = MStreamUtil.streamToString( getBodyInputStream() );
@@ -306,6 +326,7 @@ if( hasBody() )
 			}
 		else if( contentType.indexOf( "multipart/form-data" ) > -1 )
 			{
+			bodyType = BODY_TYPE_MULTIPART;
 			String boundary = MRegEx.getMatch( "boundary=(.*)", contentType );
 			try
 				{
@@ -316,6 +337,27 @@ if( hasBody() )
 				e.printStackTrace();
 				}
 			}
+		else if(  contentType.toLowerCase().indexOf( "/json" ) > -1 
+		       || contentType.toLowerCase().indexOf( "-json" ) > -1
+			)
+			{
+			bodyType = BODY_TYPE_JSON;
+			}
+		else if( contentType.toLowerCase().indexOf( "/xml" ) > -1
+		      || contentType.toLowerCase().indexOf( "-xml" ) > -1
+		       )
+			{
+			bodyType = BODY_TYPE_XML;
+			}
+		else if( contentType.toLowerCase().indexOf( "text/plain" ) > -1 )
+			{
+			bodyType = BODY_TYPE_PLAINTEXT;
+			}
+		else
+			{
+			bodyType = BODY_TYPE_UNKNOWN;
+			}
+		//TODO: DWR
 		}
 	}
 }
@@ -1026,6 +1068,11 @@ return isMultipart;
 public List getParam2List()
 {
 return param2List;
+}
+//--------------------------------------------------------------------------------
+public int getBodyType()
+{
+return bodyType;
 }
 // --------------------------------------------------------------------------------
 }
