@@ -8,6 +8,8 @@ import com.mongodb.*;
 import net.jumperz.mongo.*;
 import java.util.*;
 
+import org.bson.types.ObjectId;
+
 public class MTest
 {
 static Mongo mongo;
@@ -16,9 +18,10 @@ static DB db;
 public static void main( String[] args )
 throws Exception
 {
-mongo = new Mongo( "192.168.3.205" );
-db = mongo.getDB( "test2" );
+mongo = new Mongo( args[ 0 ] );
+db = mongo.getDB( args[ 1 ] );
 
+testGetObjectIdFromString();
 testParseJsonToArray();
 testSort();
 testLimit1();
@@ -35,6 +38,16 @@ testFindAction();
 testSkipLimit();
 System.out.println( "OK" );
 System.exit( 0 );
+}
+//--------------------------------------------------------------------------------
+public static void testGetObjectIdFromString()
+throws Exception
+{
+if( !MCoreUtil.getObjectIdFromString( "4e7008a0c50fbbc3982d05ad" ).getClass().equals( ObjectId.class ) ){ throw new Exception(); }
+if( !MCoreUtil.getObjectIdFromString( "0.9" ).getClass().equals( Double.class ) ){ throw new Exception(); }
+if( !MCoreUtil.getObjectIdFromString( "123" ).getClass().equals( Integer.class ) ){ throw new Exception(); }
+if( !MCoreUtil.getObjectIdFromString( "1fca00a5-f79d-477f-a945-d19fb62ab524" ).getClass().equals( UUID.class ) ){ throw new Exception(); }
+if( !MCoreUtil.getObjectIdFromString( "foobar" ).getClass().equals( String.class ) ){ throw new Exception(); }
 }
 //--------------------------------------------------------------------------------
 public static void testParseJsonToArray()

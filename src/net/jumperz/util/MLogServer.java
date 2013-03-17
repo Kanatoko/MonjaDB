@@ -200,6 +200,11 @@ for( int i = 0; i < array.length; ++i )
 			}
 		}
 	
+	if( ste.getMethodName().equals( "debug" ) )
+		{
+		shouldBeIgnored = true;
+		}
+	
 	if( !shouldBeIgnored )
 		{
 		if( callerClassName == null )
