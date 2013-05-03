@@ -17,7 +17,45 @@ public class MDebug
 public static void main( String[] args )
 throws Exception
 {
-System.exit( 0 );
+Mongo mongo = new Mongo( "127.0.0.1" );
+
+/*
+DB db = mongo.getDB( "admin" );
+p( db );
+p( db.authenticate( "root", "hogefuga123".toCharArray() ) + "" );
+try
+	{
+	List dbNameList = mongo.getDatabaseNames();
+	p( dbNameList );
+	}
+catch( Exception e )
+	{
+	e.printStackTrace();
+	}
+*/
+DB test = mongo.getDB( "test" );
+p( test );
+test.authenticate( "test", "test".toCharArray() );
+p( test.getCollectionNames() );
+
+DB db = mongo.getDB( "admin" );
+p( db );
+p( db.authenticate( "root", "hogefuga123".toCharArray() ) + "" );
+try
+	{
+	List dbNameList = mongo.getDatabaseNames();
+	p( dbNameList );
+	}
+catch( Exception e )
+	{
+	e.printStackTrace();
+	}
+
+}
+//--------------------------------------------------------------------------------
+public static void p( Object o )
+{
+System.out.println( o );
 }
 //--------------------------------------------------------------------------------
 }

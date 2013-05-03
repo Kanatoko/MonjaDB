@@ -33,6 +33,7 @@ if( event.getEventName().equals( event_error ) )
 	debug( event.getData().get( "error" ) );
 	if( error.toString().indexOf( "unauthorized" ) > -1 
 	 || error.toString().indexOf( "not authorized" ) > -1
+	 || error.toString().indexOf( "need to login" ) > -1
 	  )
 		{
 		MAbstractAction action = ( MAbstractAction )( event.getData().get( "source" ) );
