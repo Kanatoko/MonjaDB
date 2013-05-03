@@ -146,6 +146,7 @@ throws IOException
 checkStatus();
 
 objectResponse.chunkToNormal();
+objectResponse.gunzip();
 
 if( !objectResponse.hasBody() )
 	{

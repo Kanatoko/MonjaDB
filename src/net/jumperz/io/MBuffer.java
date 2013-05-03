@@ -7,16 +7,20 @@ import net.jumperz.util.MStreamUtil;
 /*
  * - NOT multi-thread ready
  * - cleanup() must be called ( especially for large data )
+ * test: test.jumperz.io
  */
 public final class MBuffer
 extends OutputStream
 {
+public  static final int MAX_ALLOWED_SIZE = 1024 * 1024 * 800; //800MB
 private static Set tmpFileSet = new HashSet();
-//private static Set streamSet = new HashSet();
-private static final int DEFAULT_MAX_MEM_SIZE = 1024 * 1024 * 10; //10MByte
+public  static final int DEFAULT_MAX_MEM_SIZE = 1024 * 1024 * 10; //10MByte
 private static final int BUFSIZE = 2048;
 private static int staticMaxMemSize = DEFAULT_MAX_MEM_SIZE;
-public static boolean debug = false;
+public  static boolean debug = false;
+public  static boolean suppressError = false;
+private static long mbufferTotalDiskSize = 0;
+public  static final Object staticMutex = new Object();
 
 private int totalSize = 0;
 private OutputStream activeStream;
@@ -24,11 +28,21 @@ private OutputStream fileStream;
 private ByteArrayOutputStream byteStream;
 private boolean isSmall;
 private boolean fileMode = false;
-private File tmpFile;
-private File file;
+private File tmpFile; //Created internaly in this instance. Will be deleted automatically
+private File file; //Can be set from outside of this instnace.
 private int maxMemSize;
 private boolean closed = false;
 private boolean isNull = false;
+//--------------------------------------------------------------------------------
+public static final long getMBufferTotalDiskSize()
+{
+return mbufferTotalDiskSize;
+}
+//--------------------------------------------------------------------------------
+public static int getStaticMaxMemSize()
+{
+return staticMaxMemSize;
+}
 // --------------------------------------------------------------------------------
 public static void setStaticMaxMemSize( int i )
 {
@@ -68,10 +82,26 @@ public MBuffer()
 maxMemSize = staticMaxMemSize;
 init();
 }
+//--------------------------------------------------------------------------------
+public String getInfo()
+{
+StringBuffer buf = new StringBuffer();
+buf.append( "isSmall:" ); buf.append( isSmall ); buf.append( "\n" );
+return buf.toString();
+}
 // --------------------------------------------------------------------------------
 public void write( int i )
 throws IOException
 {
+if( isSmall
+ && totalSize < maxMemSize
+ && ( totalSize + 1 ) >= maxMemSize
+  )
+	{
+	changeStreamToTmpFile();
+	}
+
+checkSizeIsOK( 1 );
 activeStream.write( i );
 totalSize++;
 }
@@ -141,10 +171,34 @@ if( isSmall
   )
 	{
 	changeStreamToTmpFile();
+
+	synchronized( staticMutex )
+		{
+		mbufferTotalDiskSize += totalSize;
+		}
 	}
+
+checkSizeIsOK( len );
 
 activeStream.write( buffer, offset, len );
 totalSize += len;
+
+if( !isSmall )
+	{
+	synchronized( staticMutex )
+		{
+		mbufferTotalDiskSize += len;
+		}
+	}
+}
+//--------------------------------------------------------------------------------
+private void checkSizeIsOK( int willBeWritten )
+throws IOException
+{
+if( ( totalSize + willBeWritten ) > MAX_ALLOWED_SIZE )
+	{
+	throw new IOException( "Size too large." );
+	}
 }
 // --------------------------------------------------------------------------------
 public byte[] getBytes()
@@ -168,7 +222,7 @@ isSmall = false;
 	// copy data
 tmpFile = File.createTempFile( "mbuffer_", ".buf" );
 file = tmpFile;
-synchronized( MBuffer.tmpFileSet )
+synchronized( staticMutex )
 	{
 	MBuffer.tmpFileSet.add( tmpFile );
 	}
@@ -207,7 +261,10 @@ else
 		}
 	catch( FileNotFoundException e )
 		{
-		e.printStackTrace();
+		if( !suppressError )
+			{
+			e.printStackTrace();
+			}
 		}
 	}
 return inputStream;
@@ -242,12 +299,14 @@ if( !isSmall )
 	MStreamUtil.closeStream( fileStream );
 	if( tmpFile != null )
 		{
-		synchronized( tmpFileSet )
+		if( tmpFile.delete() )
 			{
-			tmpFileSet.remove( tmpFile );
+			synchronized( staticMutex )
+				{
+				mbufferTotalDiskSize -= totalSize;
+				}
 			}
-
-		tmpFile.delete();
+		tmpFileSet.remove( tmpFile );
 		}
 	}
 }

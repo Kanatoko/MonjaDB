@@ -29,6 +29,7 @@ protected int bodyBufSize = DEFAULT_BODY_BUFSIZE;
 
 public abstract byte[] getHeader();
 protected abstract void recvBodyUntilDisconnected() throws IOException;
+protected List internalMBufferList;
 
 protected Map metaData;
 
@@ -455,7 +456,11 @@ return bodyBuffer.getSize();
 public final void setContentLength()
 throws IOException
 {
-setHeaderValue( "Content-Length", getBodyAsByte().length + "" );
+if( bodyBuffer == null )
+	{
+	bodyBuffer = new MBuffer();
+	}
+setHeaderValue( "Content-Length", getBodySize() + "" );
 }
 // --------------------------------------------------------------------------------
 public final void chunkToNormal()
@@ -743,6 +748,14 @@ if( bodyBuffer != null )
 	{
 	bodyBuffer.clear();	
 	}
+if( internalMBufferList != null )
+	{
+	for( int i = 0; i < internalMBufferList.size(); ++i )
+		{
+		MBuffer buf = ( MBuffer )internalMBufferList.get( i );
+		buf.clear();
+		}
+	}
 }
 //--------------------------------------------------------------------------------
 private final void clearFromInside()
@@ -831,11 +844,6 @@ return toString( MCharset.CS_ISO_8859_1 );
 public int getBodyBufSize()
 {
 return bodyBufSize;
-}
-//--------------------------------------------------------------------------------
-public void setBodyBufSize( int bodyBufSize )
-{
-this.bodyBufSize = bodyBufSize;
 }
 //--------------------------------------------------------------------------------
 public int getHeaderBufSize()

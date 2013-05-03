@@ -7,15 +7,21 @@ import net.jumperz.util.*;
 public class MMultipartParameter
 implements MAbstractParameter
 {
-private String name = "";
-private String value = "";
-private List headerList = new ArrayList();
-private String filename = "";
+protected String name = "";
+protected String value = "";
+protected List headerList = new ArrayList();
+protected String filename = "";
 // --------------------------------------------------------------------------------
 public MMultipartParameter( String s )
 throws IOException
 {
 parse( s );
+}
+// --------------------------------------------------------------------------------
+protected MMultipartParameter()
+throws IOException
+{
+//only used by extended class ( MMultipartParameter2 )
 }
 // --------------------------------------------------------------------------------
 public MMultipartParameter( String name, String value, int type )
@@ -36,7 +42,7 @@ throws IOException
 parse( "Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n" + value );
 }
 // --------------------------------------------------------------------------------
-private void parse( String in )
+protected void parse( String in )
 throws IOException
 {
 int index = in.indexOf( "\r\n\r\n" );
@@ -182,6 +188,11 @@ for( int i = 0; i < headerList.size(); ++i )
 		}
 	}
 return false;
+}
+//--------------------------------------------------------------------------------
+public int getValueSize()
+{
+return value.length();
 }
 //--------------------------------------------------------------------------------
 public void setName( String s )

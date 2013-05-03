@@ -39,7 +39,7 @@ while( true )
 			{
 			buf.append( "\\Q" );
 			buf.append( patternStr );
-			buf.append( "\\E" );		
+			buf.append( "\\E" );
 			}
 		break;
 		}
@@ -1116,7 +1116,7 @@ testFastUrlDecode();
 testContainsWordIgnoreCase();
 testIndexOfWord();
 testSimpleMatch();
-System.out.println( "OK." );
+System.out.println( "=== OK ===" );
 }
 // --------------------------------------------------------------------------------
 public static int getLineCountOfFile( String fileName )
@@ -2527,6 +2527,9 @@ return buf.toString();
 public static void testParseSQL()
 throws Exception
 {
+if( ! parseSQL( "'1234'" ).equals( "'1234'" ) ){ ex(); }
+if( ! parseSQL( "'0123456789'" ).equals( "'0123456789'" ) ){ ex(); }
+
 if( ! parseSQL( "aaa/*" ).equals( "aaa" ) ){ ex(); }
 if( ! parseSQL( "aaa/*foo*/" ).equals( "aaa " ) ){ ex(); }
 if( ! parseSQL( "aaa/* foo */" ).equals( "aaa " ) ){ ex(); }
@@ -2744,6 +2747,10 @@ if( ! parseSQL2( "foo#bar" ).equals( "foo--" ) ){ ex(); }
 if( ! parseSQL2( "foo#bar\nfoo" ).equals( "foo foo" ) ){ ex(); }
 if( ! parseSQL2( "foo#bar\nfoo#hoge" ).equals( "foo foo--" ) ){ ex(); }
 
+if( ! parseSQL2( "foo;bar" ).equals( "foo--" ) ){ ex(); }
+if( ! parseSQL2( "foo;bar\nbaz" ).equals( "foo--" ) ){ ex(); }
+if( ! parseSQL2( "foo ';' bar" ).equals( "foo '' bar" ) ){ ex(); }
+
 }
 //--------------------------------------------------------------------------------
 public static String parseSQL2( final String s )
@@ -2806,6 +2813,11 @@ for( int i = 0; i < length; ++i )
 			{
 			mode = MODE_SQL_COMMENT;
 			}
+		else if( c == ';' )
+			{
+			buf.append( "--" );
+			break;
+			}
 		else
 			{
 			buf.append( c );
@@ -2834,6 +2846,15 @@ for( int i = 0; i < length; ++i )
 					mode = MODE_DEFAULT;
 					buf.append( c );
 					}
+				}
+			}
+		else
+			{
+				//Do not remove 0-9
+			int _i = ( int )c;
+			if( 48 <= _i && _i <= 57 )
+				{
+				buf.append( c );
 				}
 			}
 		}

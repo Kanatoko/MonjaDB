@@ -6,6 +6,11 @@ public class MLongCounterMap
 {
 private Map data = new HashMap();
 //--------------------------------------------------------------------------------
+public Map getDataCopy()
+{
+return new HashMap( data );
+}
+//--------------------------------------------------------------------------------
 public synchronized Set keySet()
 {
 return data.keySet();

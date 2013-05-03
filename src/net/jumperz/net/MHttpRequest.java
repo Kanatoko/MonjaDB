@@ -20,7 +20,6 @@ private String version;
 //private String requestLine;
 private String addr = "";
 private int port;
-private boolean isMultipart = false;
 private int bodyType;
 
 	//parameters
@@ -65,6 +64,8 @@ public static final int BODY_TYPE_XML		= 4;
 public static final int BODY_TYPE_DWR		= 5;
 
 public static boolean strictRequestLine = true;
+public static boolean useMultipartParameter2 = true;
+public static boolean testMultipartParameter2 = false;
 
 //--------------------------------------------------------------------------------
 public MHttpRequest()
@@ -298,7 +299,6 @@ public void parseParameters()
 {
 uriParameterList	= new ArrayList();
 bodyParameterList	= new ArrayList();
-multipartParameterList	= new ArrayList();
 
 	//QueryString
 parseParametersImpl2( new MRequestUri( uri ).getQuery(), MAbstractParameter.URI );
@@ -327,15 +327,9 @@ if( hasBody() )
 		else if( contentType.indexOf( "multipart/form-data" ) > -1 )
 			{
 			bodyType = BODY_TYPE_MULTIPART;
-			String boundary = MRegEx.getMatch( "boundary=(.*)", contentType );
-			try
-				{
-				parseParameters3( boundary );
-				}
-			catch( IOException e )
-				{
-				e.printStackTrace();
-				}
+			multipartParameterList = null;
+			
+			//parse later
 			}
 		else if(  contentType.toLowerCase().indexOf( "/json" ) > -1 
 		       || contentType.toLowerCase().indexOf( "-json" ) > -1
@@ -357,27 +351,262 @@ if( hasBody() )
 			{
 			bodyType = BODY_TYPE_UNKNOWN;
 			}
-		//TODO: DWR
 		}
 	}
 }
-// --------------------------------------------------------------------------------
-private void parseParameters3( String boundary )
+//--------------------------------------------------------------------------------
+private static void p( Object o )
+{
+System.out.println( o );
+}
+//--------------------------------------------------------------------------------
+private boolean checkLists( List l1, List l2 )
+{
+if( l1.size() != l2.size() )
+	{
+	return false;
+	}
+
+for( int i = 0; i < l1.size(); ++i )
+	{
+	MMultipartParameter param1 = ( MMultipartParameter )l1.get( i );
+	
+	MMultipartParameter param2 = ( MMultipartParameter )l2.get( i );
+	if( param2.getValueSize() > 8192 )
+		{
+		//p( param2.getValue() );
+		}
+	
+	if( !param1.getName().equals( param2.getName() ) )
+		{
+		return false;
+		}
+	if( param1.getValueSize() != param2.getValueSize() )
+		{
+		return false;
+		}
+	if( !param1.getHeaderList().equals( param2.getHeaderList() ) )
+		{
+		return false;
+		}
+	
+	if( param1.hasFilename() )
+		{
+		if( !param2.hasFilename() )
+			{
+			return false;
+			}
+		p( param1.getFileName() );
+		if( !param1.getFileName().equals( param2.getFileName() ) )
+			{
+			return false;
+			}
+		}
+	}
+
+return true;
+}
+//--------------------------------------------------------------------------------
+private void onMBufferFound( MBuffer mbuffer )
+{
+if( internalMBufferList == null )
+	{
+	internalMBufferList = new ArrayList();
+	}
+internalMBufferList.add( mbuffer );
+}
+//--------------------------------------------------------------------------------
+/*
+ * Side effect: onMBufferFound
+ */
+private List parseMultipartParameters2( String boundary )
 throws IOException
 {
-StringBuffer buf = new StringBuffer( 8192 );
-buf.append( "\r\n" );
-buf.append( MStreamUtil.streamToString( getBodyInputStream() ) );
-String bodyStr = buf.toString();
-int index =  bodyStr.indexOf( "\r\n--" + boundary + "--" );
+final List _list = new ArrayList();
+final List _mbufferList = parseMultipartParameter( bodyBuffer.getInputStream(), boundary, 1024 * 4 );
+for( int i = 0; i < _mbufferList.size(); ++i )
+	{
+	MBuffer mbuffer = ( MBuffer )_mbufferList.get( i );
+	onMBufferFound( mbuffer );
+	
+	_list.add( new MMultipartParameter2( mbuffer ) );
+	}
+return _list;
+}
+//--------------------------------------------------------------------------------
+public static List parseMultipartParameter( InputStream in, String boundary, int bufSize )
+throws IOException
+{
+/*
+Content-Length: ...
+
+--abc
+Content-Disposition: form-data; name="a"
+
+b
+--abc
+Content-Disposition: form-data; name="c"
+
+d
+--abc
+Content-Disposition: form-data; name="foobar"
+
+sstattack
+--abc--
+
+--abcを探し、その次の2バイトに注目する
+\r\nの場合はその次のバイトからデータが開始される
+--の場合はパース終了
+--abcXXが探すべき文字列
+
+dmzSize = boundaryLength + 4 -1 = boundaryLength + 3
+
+*/
+if( boundary.length() > 1024 )
+	{
+	throw new IOException( "Invalid boudary. Too long." + boundary.substring( 0, 100 ) );
+	}
+
+List mbufferList = new ArrayList();
+final String target = "\r\n--" + boundary + "XX"; //ダミーのXXも含む
+final int dmzSize = target.length() - 1;
+final int targetSize = target.length();
+byte[] targetBuf = target.getBytes(); //boundaryはまぁUS-ASCIIだろうから、デフォルトの文字コードでOKとする
+byte[] buf = new byte[ bufSize ];
+byte[] dmzBuf = new byte[ dmzSize ];
+Arrays.fill( dmzBuf, 0, dmzBuf.length -1 , ( byte )0x00 );
+dmzBuf[ dmzBuf.length - 2 ] = ( byte )0x0D;
+dmzBuf[ dmzBuf.length - 1 ] = ( byte )0x0A;
+final int readMaxSize = buf.length - dmzSize;
+int searchIndex = 0;
+MBuffer mbuffer = null;
+boolean lastBoundaryFound = false;
+int mbufferP = dmzSize - 2;
+
+parse:
+while( true )
+	{
+		//前回のDMZデータをコピー
+	for( int i = 0; i < dmzSize; ++i )
+		{
+		buf[ i ] = dmzBuf[ i ];
+		}
+	
+		//新しいデータをストリームから読み込む
+	int read;
+	while( true )
+		{
+		read = in.read( buf, dmzSize, readMaxSize );
+		//read = in.read( buf, dmzSize, 1 );
+		if( read != 0 )
+			{
+			break;
+			}
+		}
+	
+	if( read == -1 )
+		{
+		//p( "stream end" );
+		//TODO: Invalid?
+		break;
+		}
+	
+		//次回比較用にDMZデータを取得
+	for( int i = 0; i < dmzSize; ++i )
+		{
+		dmzBuf[ i ] = buf[ read + i ];
+		}
+	
+		//buf上にtargetBufと一致する箇所があるか検索開始
+	for( int bufIndex = mbufferP; bufIndex < read; ++bufIndex )
+		{
+		boolean notFound = false;
+		for( int targetIndex = 0; targetIndex < targetSize - 2; ++targetIndex ) //XXは探さないので -2 に注意
+			{
+			if( buf[ bufIndex + targetIndex ] != targetBuf[ targetIndex ] )
+				{
+				notFound = true;
+				break;
+				}
+			}
+		
+		if( !notFound ) // found
+			{
+				//--abc\r\n か --abc-- かを見分ける
+			if( buf[ bufIndex + targetSize - 2 ] == ( byte )0x2d
+			 && buf[ bufIndex + targetSize - 1 ] == ( byte )0x2d
+			  )
+				{
+					//--abc-- found
+				//p( "lastBoundaryFound" );
+				lastBoundaryFound = true;
+				}
+			else if( buf[ bufIndex + targetSize - 2 ] == ( byte )0x0d
+			      && buf[ bufIndex + targetSize - 1 ] == ( byte )0x0a 
+				)
+				{
+					//--abc\r\n found
+				}
+			else
+				{
+				throw new IOException( "Invalid boundary found:" + new String( buf, bufIndex, targetSize ) );
+				}
+			
+				//見つかった場所までのデータをmbufferに書き込む
+			if( mbuffer != null )
+				{
+				mbuffer.write( buf, mbufferP, bufIndex - mbufferP );
+				mbuffer.close();
+				}
+			
+			if( lastBoundaryFound )
+				{
+				break parse;
+				}
+			
+			mbuffer = new MBuffer();
+			mbufferList.add( mbuffer );
+			mbufferP = bufIndex + targetSize;
+			bufIndex += targetSize;
+			}
+		}
+	
+		//buf上の残りのデータをmbufferに書き込んでおく
+	if( mbuffer != null )
+		{
+		int dataSize = read - mbufferP;
+		if( dataSize > 0 )
+			{
+			mbuffer.write( buf, mbufferP, dataSize );
+			mbufferP += dataSize;
+			}
+		}
+	mbufferP -= read;
+	}
+
+return mbufferList;
+}
+// --------------------------------------------------------------------------------
+/*
+ * Almost no side effect ( getBodyInputStream() may create new bodyBuffer instance )
+ */
+private List parseMultipartParameters( String boundary )
+throws IOException
+{
+List _list = new ArrayList();
+StringBuffer _buf = new StringBuffer( 8192 );
+_buf.append( "\r\n" );
+_buf.append( MStreamUtil.streamToString( getBodyInputStream() ) );
+String _bodyStr = _buf.toString();
+int index =  _bodyStr.indexOf( "\r\n--" + boundary + "--" );
 if( index == -1 )
 	{
 	throw new IOException( "Invalid format. Last boundary not found." );
 	}
 
-bodyStr = bodyStr.substring( 0, index );
+_bodyStr = _bodyStr.substring( 0, index );
 
-List array = MStringUtil.split( bodyStr, "\r\n--" + boundary + "\r\n" );
+List array = MStringUtil.split( _bodyStr, "\r\n--" + boundary + "\r\n" );
 for( int i = 0; i < array.size(); ++i )
 	{
 	String _s = ( String )array.get( i );
@@ -385,10 +614,9 @@ for( int i = 0; i < array.size(); ++i )
 		{
 		continue;
 		}
-	MMultipartParameter parameter = new MMultipartParameter( _s );
-	multipartParameterList.add( parameter );
+	_list.add( new MMultipartParameter( _s ) );
 	}
-isMultipart = true;
+return _list;
 }
 //-------------------------------------------------------------------------------
 private void recvHeader()
@@ -456,40 +684,6 @@ if( !method.matches( "^[a-zA-Z]+$" ) )
 setMethod( method );
 uri	= requestLineArray[ 1 ];
 version	= requestLineArray[ 2 ];
-}
-//--------------------------------------------------------------------------------
-public static void testHasValidBodyState()
-throws Exception
-{
-MHttpRequest request = new MHttpRequest( "POST /index.php HTTP/1.1\r\n"
- + "Host: www.jumperz.net\r\n"
- + "User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; ja; rv:1.9.0.13) Gecko/2009080315 Ubuntu/9.04 (jaunty) Firefox/3.0.13\r\n"
- + "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
- + "Accept-Language: ja,en-us;q=0.7,en;q=0.3\r\n"
- + "Accept-Charset: Shift_JIS,utf-8;q=0.7,*;q=0.7\r\n"
- + "Keep-Alive: 300\r\n"
- + "Referer: http://www.jumperz.net/index.php?i=4\r\n"
- + "Cookie: JSESSIONID=FD4263B711FB3152E7C0193D627DBD5C\r\n"
- + "Content-Type: application/x-www-form-urlencoded\r\n"
- + "Content-Length: 31\r\n"
- + "Connection: keep-alive\r\n"
- + "\r\n" );
-
-if( request.isInvalidPostState() != true ) { throw new Exception(); }
-
-request.setBody("i=5&bazz=%82%A0&title=&message=" );
-
-if( request.isInvalidPostState() != false ) { throw new Exception(); }
-
-request = new MHttpRequest();
-if( request.isInvalidPostState() != false ) { throw new Exception(); }
-}
-//--------------------------------------------------------------------------------
-public static void main( String[] args )
-throws Exception
-{
-testHasValidBodyState();
-System.out.println( "OK." );
 }
 //--------------------------------------------------------------------------------
 public boolean isInvalidPostState()
@@ -752,15 +946,15 @@ public List getParameterList( int type )
 {
 if( type == MAbstractParameter.URI ) 
 	{
-	return uriParameterList;
+	return MSystemUtil.avoidNullList( uriParameterList );
 	}
 else if( type == MAbstractParameter.BODY )
 	{
-	return bodyParameterList;
+	return MSystemUtil.avoidNullList( bodyParameterList );
 	}
 else if( type == MAbstractParameter.MULTIPART )
 	{
-	return multipartParameterList;
+	return MSystemUtil.avoidNullList( getMultipartParameterList() );
 	}
 return new ArrayList();
 }
@@ -768,87 +962,11 @@ return new ArrayList();
 public List getParameterList()
 {
 List l = new ArrayList();
-l.addAll( uriParameterList );
-l.addAll( bodyParameterList );
-l.addAll( multipartParameterList );
+MSystemUtil.addAll( l, uriParameterList );
+MSystemUtil.addAll( l, bodyParameterList );
+MSystemUtil.addAll( l, getMultipartParameterList() );
 return l;
 }
-/*
-// --------------------------------------------------------------------------------
-public List getParameterNameList()
-{
-return parameterNameList;
-}*/
-/*
-// --------------------------------------------------------------------------------
-public void setParameter( MAbstractParameter param, int index )
-{
-String name = param.getName();
-if( parameterNameSet1.contains( name ) )
-	{
-	parameterMap1.put( name, param );
-	}
-else if( parameterNameSet2.contains( name ) )
-	{
-	List l = ( List )parameterMap2.get( name );
-	for( int i = 0; i < l.size(); ++i )
-		{
-		if( i == index )
-			{
-				//replace old param
-			Object oldParam = l.get( index );
-			l.add( index, param );
-			l.remove( oldParam );
-			}
-		}
-	}
-else
-	{
-	addParameter( param );
-	}
-}
-// --------------------------------------------------------------------------------
-public void setParameter( MAbstractParameter param )
-{
-setParameter( param, 0 );
-}
-*/
-/*
-// --------------------------------------------------------------------------------
-public List getParameterList( String name )
-{
-if( parameterNameSet1.contains( name ) )
-	{
-	List l = new ArrayList();
-	l.add( parameterMap1.get( name ) );
-	return l;
-	}
-else if( parameterNameSet2.contains( name ) )
-	{
-	return ( List )parameterMap2.get( name );
-	}
-else
-	{
-	return new ArrayList();
-	}
-}
-// --------------------------------------------------------------------------------
-public MAbstractParameter getParameter( String name )
-{
-if( parameterNameSet1.contains( name ) )
-	{
-	return ( MAbstractParameter )parameterMap1.get( name );
-	}
-else if( parameterNameSet2.contains( name ) )
-	{
-	return ( MAbstractParameter )( ( List )parameterMap2.get( name ) ).get( 0 );
-	}
-else
-	{
-	return new MParameter( name, "", MAbstractParameter.URI );
-	}
-}
-*/
 //--------------------------------------------------------------------------------
 public Object clone()
 throws CloneNotSupportedException
@@ -893,7 +1011,7 @@ if( parameter != null )
 	return parameter.getValue();
 	}
 
-parameter = getParameter( multipartParameterList, name );
+parameter = getParameter( getMultipartParameterList(), name );
 if( parameter != null )
 	{
 	return parameter.getValue();
@@ -1037,18 +1155,59 @@ return bodyParameterList;
 // --------------------------------------------------------------------------------
 public List getMultipartParameterList()
 {
+	//is lazy?
+if( isMultipartRequest() )
+	{
+	if( multipartParameterList == null )
+		{
+		String contentType = getHeaderValue( "Content-Type" );
+		if( contentType != null )
+			{
+			String boundary = MRegEx.getMatch( "boundary=(.*)", contentType );
+			try
+				{
+				multipartParameterList = new ArrayList();
+				if( testMultipartParameter2 )
+					{
+					List l1 = parseMultipartParameters( boundary );
+					List l2 = parseMultipartParameters2( boundary );
+					p( "--MHttpRequest-check  " + checkLists( l1, l2 ) );
+					
+					multipartParameterList.addAll( l2 );
+					}
+				else if( useMultipartParameter2 )
+					{					
+					multipartParameterList.addAll( parseMultipartParameters2( boundary ) );
+					}
+				else
+					{
+					multipartParameterList.addAll( parseMultipartParameters( boundary ) );
+					}
+				}
+			catch( IOException e )
+				{
+				e.printStackTrace();
+				}
+			}
+		}
+	}
+
+if( multipartParameterList == null )
+	{
+	multipartParameterList = new ArrayList();
+	}
 return multipartParameterList;
 }
 // --------------------------------------------------------------------------------
 public List getUriParameterList()
 {
-return uriParameterList;
+return MSystemUtil.avoidNullList( uriParameterList );
 }
 // --------------------------------------------------------------------------------
-public void setBodyParameterList( List bodyParameterList )
+/*public void setBodyParameterList( List bodyParameterList )
 {
 this.bodyParameterList = bodyParameterList;
-}
+}*/
 // --------------------------------------------------------------------------------
 public void setMultipartParameterList( List multipartParameterList )
 {
@@ -1062,7 +1221,7 @@ this.uriParameterList = uriParameterList;
 // --------------------------------------------------------------------------------
 public boolean isMultipartRequest()
 {
-return isMultipart;
+return hasBody() && getBodyType() == BODY_TYPE_MULTIPART;
 }
 // --------------------------------------------------------------------------------
 public List getParam2List()

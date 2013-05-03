@@ -12,10 +12,16 @@ public class MJaxerPing
 public static void main( String[] args )
 throws Exception
 {
+execute( args );
+}
+//--------------------------------------------------------------------------------
+public static boolean execute( String[] args )
+throws Exception
+{
 if( args.length != 1 )
 	{
 	System.err.println( "Usage: jaxerPing address" );
-	return;
+	return false;
 	}
 MHttpRequest req = new MHttpRequest( "GET / HTTP/1.0\r\nHost: foobar.1.2.3\r\n\r\n" );
 MHttpResponse res = new MHttpResponse( "HTTP/1.0 200 OK\r\nConnection: close\r\nX-Foo: bar\r\n\r\n" );
@@ -39,10 +45,12 @@ if( !jf.isError()
 )
 	{
 	p( "OK" );
+	return true;
 	}
 else
 	{
 	p( "Error" );
+	return false;
 	}
 }
 //--------------------------------------------------------------------------------

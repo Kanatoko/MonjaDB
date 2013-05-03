@@ -61,7 +61,7 @@ while( !terminated )
 	catch( Throwable e )
 		{
 		 // execute() throws no Exception
-		System.err.println( "Caught a throwable. The Command is : " + command );
+		System.err.println( "Caught a throwable. The Command is : " + command.getClass() );
 		e.printStackTrace();
 		command.breakCommand();
 		}

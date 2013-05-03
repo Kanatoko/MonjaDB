@@ -238,17 +238,20 @@ process.destroy();
 
 return result;
 }
+/*
 //--------------------------------------------------------------------------------
 public static String decodeParam( String value )
 {
-return decodeParam( value, MCharset.CS_ISO_8859_1 );
+return MUnicodeUrlDecoder.decodeForIIS( value, MCharset.CS_ISO_8859_1 );
+//return decodeParam( value, MCharset.CS_ISO_8859_1 );
 }
+*/
 //--------------------------------------------------------------------------------
-public static String decodeParam( String value, String charset )
+private static String decodeParam( String value, String charset )
 {
 try
 	{
-	if( MUnicodeUrlDecoder.isUrlDecoded( value ) )
+	if( MUnicodeUrlDecoder.isEncodedWithU( value ) )
 		{
 		value = MUnicodeUrlDecoder.decode( value );
 		}
@@ -1011,6 +1014,38 @@ buf.append( "." );
 buf.append( Integer.parseInt( s.substring( 0, 2 ), 16 ) );
 
 return buf.toString();
+}
+//--------------------------------------------------------------------------------
+public static final List avoidNullList( List origin )
+{
+if( origin == null )
+	{
+	return new ArrayList( 0 );
+	}
+else
+	{
+	return origin;
+	}
+}
+//--------------------------------------------------------------------------------
+public static final Collection addAll( Collection l1, Collection l2 )
+{
+if( l1 == null )
+	{
+	throw new NullPointerException();
+	}
+else
+	{
+	if( l2 == null )
+		{
+		return l1;
+		}
+	else
+		{
+		l1.addAll( l2 );
+		return l1;
+		}
+	}
 }
 //--------------------------------------------------------------------------------
 //From Apache Commons

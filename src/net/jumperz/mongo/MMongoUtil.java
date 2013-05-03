@@ -23,6 +23,12 @@ public class MMongoUtil
 public static final String INC = "$inc";
 public static final String SET = "$set";
 public static final String OR  = "$or";
+public static final String MATCH = "$match";
+public static final String GROUP = "$group";
+public static final String PROJECT = "$project";
+public static final String SORT = "$sort";
+public static final String UNWIND = "$unwind";
+public static final String LIMIT = "$limit";
 
 public static final String ADDTOSET = "$addToSet";
 private static final int MAX_COUNT = 320000;

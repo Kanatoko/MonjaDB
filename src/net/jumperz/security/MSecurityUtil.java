@@ -237,6 +237,12 @@ keyStore.setKeyEntry( KEYSTORE_ALIAS, privateKey, KEY_PASS.toCharArray(), certLi
 return keyStore;
 }
 // --------------------------------------------------------------------------------
+public static void initSslContext( SSLContext ctx, KeyStore keyStore  )
+throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, KeyManagementException
+{
+initSslContextForServer( ctx, keyStore );
+}
+// --------------------------------------------------------------------------------
 public static void initSslContextForServer( SSLContext ctx, KeyStore keyStore  )
 throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, KeyManagementException
 {

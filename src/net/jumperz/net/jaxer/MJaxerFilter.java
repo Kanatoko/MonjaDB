@@ -236,6 +236,7 @@ private void sendResponseBody()
 throws IOException
 {
 response.chunkToNormal();
+response.gunzip();
 String bodyStr = response.getBodyAsString();
 while( true )
 	{

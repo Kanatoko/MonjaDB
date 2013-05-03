@@ -25,10 +25,15 @@ public void update( Object e, Object source )
 {
 MEvent event = ( MEvent )e;
 
+debug( event.getEventName() );
+
 if( event.getEventName().equals( event_error ) )
 	{
 	Exception error = ( Exception )( event.getData().get( "error" ) );
-	if( error.toString().indexOf( "unauthorized " ) > -1 )
+	debug( event.getData().get( "error" ) );
+	if( error.toString().indexOf( "unauthorized" ) > -1 
+	 || error.toString().indexOf( "not authorized" ) > -1
+	  )
 		{
 		MAbstractAction action = ( MAbstractAction )( event.getData().get( "source" ) );
 		if( action.getEventName().equals( event_showdbs ) )
