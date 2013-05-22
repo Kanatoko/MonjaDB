@@ -96,7 +96,17 @@ if( selected != null && selected.length == 1 )
 				executeAction( "use " + dbName );
 				executeAction( "show collections" );
 				}
-			actionManager.executeAction( "db." + collName + ".find()" );
+			
+			String prefix = "";
+			if( collName.matches( "^[\\.a-zA-Z0-9]+$" ) )
+				{
+				prefix = "db." + collName;
+				}
+			else
+				{
+				prefix = "db[ '" + collName + "' ]";
+				}
+			actionManager.executeAction( prefix + ".find()" );
 			}
 		}
 	}

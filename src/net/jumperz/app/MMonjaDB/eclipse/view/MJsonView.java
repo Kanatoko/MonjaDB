@@ -11,6 +11,7 @@ import org.eclipse.ui.part.ViewPart;
 import net.jumperz.app.MMonjaDB.eclipse.MUtil;
 import net.jumperz.app.MMonjaDB.eclipse.dialog.MActionDialog;
 import net.jumperz.app.MMonjaDB.eclipse.dialog.MPromptDialog;
+import net.jumperz.app.MMonjaDBCore.MCoreUtil;
 import net.jumperz.app.MMonjaDBCore.MInputView;
 import net.jumperz.app.MMonjaDBCore.MOutputView;
 import net.jumperz.app.MMonjaDBCore.action.mj.*;
@@ -76,7 +77,7 @@ s = s.replaceAll( "\r", "" );
 s = s.replaceAll( "\n", "" );
 s = s.replaceAll( "\t", "" );
 
-executeAction( "db." + collName + ".save(" + s + ")" );
+executeAction( MCoreUtil.getCollPrefix( collName ) + ".save(" + s + ")" );
 dataManager.reloadDocument();
 }
 //--------------------------------------------------------------------------------

@@ -155,6 +155,10 @@ String jsStr = MStreamUtil.streamToString( MStreamUtil.getResourceStream( "net/j
 jsStr = MStringUtil.replaceFirst( jsStr, "//_QUERY_", findQueryStr );
 //System.out.println( jsStr );
 
+debug( "============" );
+debug( jsStr );
+debug( "============" );
+
 BasicDBObject result = ( BasicDBObject )db.eval( jsStr, null );
 
 result.remove( "find" );
@@ -435,8 +439,16 @@ return nameList;
 //--------------------------------------------------------------------------------
 public static String getCollNameFromAction( String actionStr, String actionName )
 {
+if( actionStr.matches( "^db\\[\\s*'.*" ) )
+	{
+	String s = MRegEx.getMatch( "^[^']+'([^']+)'", actionStr );
+	return s;
+	}
+else
+	{
 	//db.service.find() -> service
-return MRegEx.getMatchIgnoreCase( "^db\\.([^\\(]+)\\." + actionName + "\\(", actionStr );
+	return MRegEx.getMatchIgnoreCase( "^db\\.([^\\(]+)\\." + actionName + "\\(", actionStr );
+	}
 }
 /*
 //--------------------------------------------------------------------------------

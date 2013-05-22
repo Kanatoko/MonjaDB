@@ -548,6 +548,8 @@ if( !MMongoUtil.getCollNameFromAction( "db.service.find({})", "find" ).equals( "
 if( !MMongoUtil.getCollNameFromAction( "db.service.find({},{'a':1})", "find" ).equals( "service" ) ){ throw new Exception(); }
 if( !MMongoUtil.getCollNameFromAction( "db.blog.posts.find()", "find" ).equals( "blog.posts" ) ){ throw new Exception(); }
 
+if( !MMongoUtil.getCollNameFromAction( "db[ 'foo' ].find()", "find" ).equals( "foo" ) ){ throw new Exception(); }
+
 }
 //--------------------------------------------------------------------------------
 public static void p( Object o )

@@ -7,6 +7,18 @@ import org.bson.types.ObjectId;
 public class MCoreUtil
 {
 //--------------------------------------------------------------------------------
+public static String getCollPrefix( String collName )
+{
+if( collName.matches( "^[\\.a-zA-Z0-9]+$" ) )
+	{
+	return "db." + collName;
+	}
+else
+	{
+	return "db[ '" + collName + "' ]";
+	}
+}
+//--------------------------------------------------------------------------------
 public static Object getObjectIdFromString( String _idStr )
 {
 Object _idObj;

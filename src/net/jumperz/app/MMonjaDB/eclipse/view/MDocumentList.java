@@ -37,6 +37,7 @@ import net.jumperz.mongo.MMongoUtil;
 
 import net.jumperz.app.MMonjaDB.eclipse.MUtil;
 import net.jumperz.app.MMonjaDB.eclipse.dialog.*;
+import net.jumperz.app.MMonjaDBCore.MCoreUtil;
 import net.jumperz.app.MMonjaDBCore.MDataManager;
 import net.jumperz.app.MMonjaDBCore.MOutputView;
 import net.jumperz.app.MMonjaDBCore.action.*;
@@ -266,7 +267,7 @@ for( int i = 0; i < items.length; ++i )
 	BasicDBObject removeCond = new BasicDBObject();
 	removeCond.put( "_id", data.get( "_id" ) );
 	String objectStr = MMongoUtil.toJson( dataManager.getDB(), removeCond, true );
-	executeAction( "db." + collName + ".remove(" + objectStr + ")" );
+	executeAction( MCoreUtil.getCollPrefix( collName ) + ".remove(" + objectStr + ")" );
 	}
 dataManager.reloadDocument();
 }});//----
@@ -307,7 +308,7 @@ if( dialogData.containsKey( "json" ) )
 	BasicDBList list = MMongoUtil.parseJsonToArray( dataManager.getDB(), jsonStr );
 	for( int i = 0; i < list.size(); ++i )
 		{
-		executeAction( "db." + collName + ".insert(" + MMongoUtil.toJson( dataManager.getDB(), list.get( i ), true ) + ")" );
+		executeAction( MCoreUtil.getCollPrefix( collName ) + ".insert(" + MMongoUtil.toJson( dataManager.getDB(), list.get( i ), true ) + ")" );
 		}
 	reload();
 	}
@@ -315,7 +316,7 @@ if( dialogData.containsKey( "json" ) )
 //--------------------------------------------------------------------------------
 private void insertBlankDocument()
 {
-executeAction( "db." + collName + ".insert({})" );
+executeAction( MCoreUtil.getCollPrefix( collName ) + ".insert({})" );
 reload();
 }
 //--------------------------------------------------------------------------------

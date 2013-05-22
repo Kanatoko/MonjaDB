@@ -352,20 +352,7 @@ else
 	updateStr = MMongoUtil.toJson( getDB(), update );
 	}
 
-String collName = getCollName();
-
-String prefix = "";
-
-if( collName.matches( "^[\\.a-zA-Z0-9]+$" ) )
-	{
-	prefix = "db." + collName;
-	}
-else
-	{
-	prefix = "db[ '" + collName + "' ]";
-	}
-
-MActionManager.getInstance().executeAction( prefix + ".update(" +
+MActionManager.getInstance().executeAction( MCoreUtil.getCollPrefix( getCollName() ) + ".update(" +
 	MMongoUtil.toJson( getDB(), query ) + "," +
 	updateStr +
 	",false, false )" );
