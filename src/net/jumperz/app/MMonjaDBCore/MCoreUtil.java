@@ -38,7 +38,14 @@ if( _idStr.length() > 0 )
 		else if( _idStr.matches( "^[0-9]+$" ) )
 			{
 				//assume the type of OID is integer
-			_idObj = new Integer( _idStr );
+			try
+				{
+				_idObj = new Integer( _idStr );
+				}
+			catch( NumberFormatException nfe )
+				{
+				_idObj = new Double( _idStr );
+				}
 			}
 		else if( isUuid( _idStr ) )
 			{

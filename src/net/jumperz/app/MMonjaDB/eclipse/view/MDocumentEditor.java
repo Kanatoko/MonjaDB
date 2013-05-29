@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import net.jumperz.util.*;
 import java.io.*;
+import java.math.BigDecimal;
 
 import net.jumperz.app.MMonjaDB.eclipse.MUtil;
 import net.jumperz.app.MMonjaDB.eclipse.dialog.*;
@@ -176,6 +177,11 @@ executeAction( "mj edit field " +  fieldName );
 //--------------------------------------------------------------------------------
 private void setItemInfo( TreeItem treeItem, String key, Object value )
 {
+if( value.getClass() == Double.class )
+	{
+	BigDecimal bd = new BigDecimal( ( ( Double )value ).doubleValue() );
+	value = bd.toString();
+	}
 treeItem.setText( key + " : " + value ); 
 if( value instanceof Integer )
 	{
@@ -327,7 +333,17 @@ _tree.removeAll();
 if( data != null )
 	{
 	TreeItem root = new TreeItem( _tree, SWT.NONE );
-	root.setText( data.get( "_id" ) + "" );
+	
+	{
+	String _idStr = data.get( "_id" ).toString();
+	Object _idObj = data.get( "_id" );
+	if( _idObj.getClass() == Double.class )
+		{
+		_idStr = ( new BigDecimal( ( ( Double )_idObj ).doubleValue() ) ).toString();
+		}
+	root.setText( _idStr );
+	}
+	
 	root.setImage( documentImage );
 	root.setData( "fieldName", "" );
 	root.setData( "value", data.get( "_id" ) );
@@ -414,7 +430,18 @@ if( fieldName.equals( "_id" ) )
 	typeCombo.setEnabled( false );
 	nameText.setText( fieldName );
 	editingData = item.getData( "value" );
-	valueText.setText( editingData + "" );
+	
+	{
+	if( editingData.getClass() == Double.class )
+		{
+		valueText.setText( ( new BigDecimal( ( ( Double )editingData ).doubleValue() ) ).toString() );
+		}
+	else
+		{
+		valueText.setText( editingData.toString() );
+		}
+	}
+
 	typeCombo.select(
 		( ( Integer )typeComboIndexMap.get( editingData.getClass() ) ).intValue()
 		);

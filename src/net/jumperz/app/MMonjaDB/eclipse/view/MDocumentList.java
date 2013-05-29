@@ -31,6 +31,8 @@ import java.util.List;
 
 import net.jumperz.util.*;
 import java.io.*;
+import java.math.BigDecimal;
+
 import net.jumperz.gui.*;
 import net.jumperz.mongo.MFindQuery;
 import net.jumperz.mongo.MMongoUtil;
@@ -1101,14 +1103,14 @@ try
 				}
 			else
 				{
-				/*
-				if( value instanceof java.util.Date )
+				if( columnName.equals( "_id" )
+				 && value.getClass() == Double.class
+				  )
 					{
-					DateFormat df = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
-					item.setText( k, df.format( ( Date  )value ) );
+					BigDecimal bd = new BigDecimal( ( ( Double )value ).doubleValue() );
+					item.setText( k, bd.toString() );
 					}
 				else
-				*/
 					{
 					item.setText( k, value.toString() );				
 					}
