@@ -150,6 +150,7 @@ public DBObject getDocumentDataByAction( MEditAction action )
 Object _id = action.getIdAsObject();
 DBObject _data = ( DBObject)getDocumentDataMap().get( _id );
 
+	// Double?
 if( _data == null )
 	{
 	String _idStr = action.getIdAsString();
@@ -157,6 +158,16 @@ if( _data == null )
 		{
 			//is objectid type double?
 		_data = ( DBObject)getDocumentDataMap().get( new Double( _idStr ) );
+		}
+	}
+	// Long?
+if( _data == null )
+	{
+	String _idStr = action.getIdAsString();
+	if( _idStr.matches( "^[\\.0-9]+$" ) )
+		{
+			//is objectid type double?
+		_data = ( DBObject)getDocumentDataMap().get( new Long( _idStr ) );
 		}
 	}
 return _data;

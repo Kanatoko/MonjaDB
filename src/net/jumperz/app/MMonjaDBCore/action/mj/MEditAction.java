@@ -42,6 +42,7 @@ public boolean parse( String action )
 this.action = action;
 _idStr = MRegEx.getMatch( "mj edit (.*)$", action );
 _idObj = MCoreUtil.getObjectIdFromString( _idStr );
+debug( _idObj );
 if( _idObj == null )
 	{
 	return false;

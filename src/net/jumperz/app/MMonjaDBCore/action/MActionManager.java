@@ -104,10 +104,8 @@ action.setOriginView( view );
 
 if( !action.parse( actionStr ) )
 	{
-	debug( action );
 	MParseException e = new MParseException( "Parse Error : " + actionStr );
 	MEventManager.getInstance().fireErrorEvent( e );
-	//MEventManager.getInstance().fireErrorEvent( e, event_error_parse );
 	return null;
 	}
 

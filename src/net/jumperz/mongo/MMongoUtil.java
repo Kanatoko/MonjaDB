@@ -155,10 +155,6 @@ String jsStr = MStreamUtil.streamToString( MStreamUtil.getResourceStream( "net/j
 jsStr = MStringUtil.replaceFirst( jsStr, "//_QUERY_", findQueryStr );
 //System.out.println( jsStr );
 
-debug( "============" );
-debug( jsStr );
-debug( "============" );
-
 BasicDBObject result = ( BasicDBObject )db.eval( jsStr, null );
 
 result.remove( "find" );

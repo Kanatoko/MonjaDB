@@ -177,7 +177,7 @@ executeAction( "mj edit field " +  fieldName );
 //--------------------------------------------------------------------------------
 private void setItemInfo( TreeItem treeItem, String key, Object value )
 {
-if( value.getClass() == Double.class )
+if( key.equals( "_id" ) && value.getClass() == Double.class )
 	{
 	BigDecimal bd = new BigDecimal( ( ( Double )value ).doubleValue() );
 	value = bd.toString();
