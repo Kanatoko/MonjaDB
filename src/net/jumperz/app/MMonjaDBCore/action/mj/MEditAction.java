@@ -1,6 +1,5 @@
 package net.jumperz.app.MMonjaDBCore.action.mj;
 
-import java.text.Collator;
 import java.util.*;
 
 import org.bson.types.ObjectId;
@@ -37,12 +36,17 @@ public String getIdAsString()
 return _idStr;
 }
 //--------------------------------------------------------------------------------
+public void setIdObj( Object o )
+{
+_idObj = o;
+}
+//--------------------------------------------------------------------------------
 public boolean parse( String action )
 {
 this.action = action;
 _idStr = MRegEx.getMatch( "mj edit (.*)$", action );
 _idObj = MCoreUtil.getObjectIdFromString( _idStr );
-debug( _idObj );
+//info( _idObj );
 if( _idObj == null )
 	{
 	return false;

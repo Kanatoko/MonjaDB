@@ -148,7 +148,7 @@ return documentDataList;
 public DBObject getDocumentDataByAction( MEditAction action )
 {
 Object _id = action.getIdAsObject();
-DBObject _data = ( DBObject)getDocumentDataMap().get( _id );
+DBObject _data = ( DBObject )getDocumentDataMap().get( _id );
 
 	// Double?
 if( _data == null )
@@ -157,9 +157,11 @@ if( _data == null )
 	if( _idStr.matches( "^[\\.0-9]+$" ) )
 		{
 			//is objectid type double?
-		_data = ( DBObject)getDocumentDataMap().get( new Double( _idStr ) );
+		_id = new Double( _idStr );
+		_data = ( DBObject )getDocumentDataMap().get( _id );
 		}
 	}
+
 	// Long?
 if( _data == null )
 	{
@@ -167,9 +169,28 @@ if( _data == null )
 	if( _idStr.matches( "^[\\.0-9]+$" ) )
 		{
 			//is objectid type double?
-		_data = ( DBObject)getDocumentDataMap().get( new Long( _idStr ) );
+		_id = new Long( _idStr );
+		_data = ( DBObject )getDocumentDataMap().get( _id );
 		}
 	}
+
+	//UUID like string?
+if( _data == null )
+	{
+	String _idStr = action.getIdAsString();
+	if( MCoreUtil.isUuid( _idStr ) )
+		{
+		_id = _idStr;
+		_data = ( DBObject )getDocumentDataMap().get( _id );
+		}
+	}
+
+
+if( _data != null )
+	{
+	action.setIdObj( _id );
+	}
+
 return _data;
 }
 //--------------------------------------------------------------------------------
