@@ -38,6 +38,11 @@ try
 		db = MDataManager.getInstance().getDB();
 		}
 	
+	if( db.isAuthenticated() )
+		{
+		return;
+		}
+	
 		//exec auth
 	if( db.authenticate( username, passwd.toCharArray() ) )
 		{

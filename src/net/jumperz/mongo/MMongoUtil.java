@@ -149,7 +149,14 @@ throws IOException
 {
 final String _origStr = findQueryStr;
 String collName = getCollNameFromAction( findQueryStr, "find" );
-findQueryStr = findQueryStr.replaceFirst( "db." + collName, "a" );
+if( _origStr.startsWith( "db." + collName ) )
+	{
+	findQueryStr = findQueryStr.replaceFirst( "db." + collName, "a" );
+	}
+else if( _origStr.startsWith( "db[" ) )
+	{
+	findQueryStr = findQueryStr.replaceFirst( "[^\\]]+\\]", "a" );
+	}
 
 String jsStr = MStreamUtil.streamToString( MStreamUtil.getResourceStream( "net/jumperz/mongo/parseFindQuery.txt" ) );
 jsStr = MStringUtil.replaceFirst( jsStr, "//_QUERY_", findQueryStr );

@@ -133,6 +133,11 @@ MFindQuery q = MMongoUtil.parseFindQuery( db, "db.test.find({'a':'hoge\tfoo'},{b
 if( !MMongoUtil.findQueryToString( db, q ).equals( "db.test.find({\"a\" : \"hoge\\tfoo\"},{\"b\" : 1,\"_id\" : ObjectId(\"4e3a0d5cce7ad68f274f3873\")},10,20).skip( 23 ).limit( 10 )" ) ){ throw new Exception(); }
 }
 
+{
+MFindQuery q = MMongoUtil.parseFindQuery( db, "db[ 'test' ].find({'a':1},{b:1},10,20).skip(23).limit(10)" );
+if( !MMongoUtil.findQueryToString( db, q ).equals( "db.test.find( { \"a\" : 1 }, { \"b\" : 1 }, 10, 20 ).skip( 23 ).limit( 10 )" ) ){ throw new Exception(); }
+}
+
 }
 //--------------------------------------------------------------------------------
 public static void testParseFindQuery()
