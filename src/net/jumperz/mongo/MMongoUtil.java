@@ -437,6 +437,19 @@ for( int i = 0; i < dataList.size(); ++i )
 			}
 		}
 	}
+
+	// move "_id" to the front
+if( nameList.contains( "_id" ) )
+	{
+	if( !nameList.get( 0 ).equals( "_id" ) )
+		{
+		nameList.remove( "_id" );
+		List tmpList = new ArrayList();
+		tmpList.add( "_id" );
+		tmpList.addAll( nameList );
+		nameList = tmpList;
+		}
+	}
 return nameList;
 }
 //--------------------------------------------------------------------------------
